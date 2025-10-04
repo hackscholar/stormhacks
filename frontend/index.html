@@ -3,10 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>StormHacks Auth</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="app">
+        <div class="auth-container">
+            <h1 id="title">Sign In</h1>
+            
+            <form class="auth-form" id="authForm">
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <input type="password" id="confirmPassword" placeholder="Confirm Password" style="display: none;" required>
+                
+                <button type="submit" id="submitBtn">Sign In</button>
+            </form>
+            
+            <p>
+                <span id="toggleText">Don't have an account?</span>
+                <button class="toggle-btn" id="toggleBtn">Sign Up</button>
+            </p>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
