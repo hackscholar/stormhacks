@@ -26,5 +26,10 @@ toggleBtn.addEventListener('click', () => {
 
 document.getElementById('authForm').addEventListener('submit', (e) => {
     e.preventDefault();
-    alert(isSignUp ? 'Sign up submitted!' : 'Sign in submitted!');
+    if (isSignUp) {
+        alert('Sign up submitted!');
+    } else {
+        // Redirect to dashboard after sign in
+        window.location.href = 'dashboard.html';
+    }
 });

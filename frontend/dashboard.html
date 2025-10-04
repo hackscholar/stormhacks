@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StormHacks Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <div class="dashboard">
+        <h1>Welcome to StormHacks</h1>
+        
+        <div class="options-container">
+            <div class="option-card">
+                <h2>Create Project</h2>
+                <p>Start a new project for the hackathon</p>
+                <button onclick="createProject()">Create</button>
+            </div>
+            
+            <div class="option-card">
+                <h2>Join Project</h2>
+                <p>Join an existing team project</p>
+                <button onclick="joinProject()">Join</button>
+            </div>
+            
+            <div class="option-card">
+                <h2>View Projects</h2>
+                <p>Browse all existing projects</p>
+                <button onclick="viewProjects()">View</button>
+            </div>
+        </div>
+    </div>
+    <script src="dashboard.js"></script>
+</body>
+</html>
