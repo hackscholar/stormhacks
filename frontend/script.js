@@ -48,7 +48,7 @@ document.getElementById('authForm').addEventListener('submit', async (e) => {
                 alert('Account created! Please sign in.');
                 toggleBtn.click(); // Switch to sign in
             } else {
-                window.location.href = API_BASE + '/';
+                window.location.href = API_BASE + '/upload';
             }
         } else {
             const error = await response.text();
