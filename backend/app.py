@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager, UserMixin, login_user, login_required,
@@ -8,10 +8,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_dance.contrib.google import make_google_blueprint, google
 from flask_cors import CORS
 from dotenv import load_dotenv
-import os
-from flask import Flask, request, jsonify, send_file
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
 import os
 from datetime import datetime
 
@@ -24,8 +20,11 @@ app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
 CORS(app)
 
+# Create uploads directory
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Database Setup
 db = SQLAlchemy(app)
@@ -47,6 +46,16 @@ class User(db.Model, UserMixin):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# File Upload Model
+class UserFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    file_path = db.Column(db.String(500), nullable=False)
+    file_size = db.Column(db.Integer, nullable=False)
+    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+    user_email = db.Column(db.String(255), nullable=True)
+
 # Google OAuth Setup
 google_bp = make_google_blueprint(
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
@@ -62,13 +71,18 @@ app.register_blueprint(google_bp, url_prefix="/login")
 @app.route("/")
 def home():
     if current_user.is_authenticated:
-        return f"Hello, {current_user.email}! <a href='/logout'>Logout</a>"
+        return redirect("/upload")
     return (
         "<h1>Welcome!</h1>"
         "<a href='/signup'>Sign up</a> | "
         "<a href='/login'>Login</a> | "
         "<a href='/login/google'>Login with Google</a>"
     )
+
+# Serve upload.html directly
+@app.route("/upload.html")
+def serve_upload():
+    return send_file('../frontend/upload.html')
 
 # Signup Route (Email/Password)
 @app.route("/signup", methods=["GET", "POST"])
@@ -120,7 +134,7 @@ def google_login():
         db.session.commit()
 
     login_user(user)
-    return redirect(url_for("home"))
+    return redirect("http://localhost:5001/upload.html")
 
 # Logout Route
 @app.route("/logout")
@@ -129,34 +143,7 @@ def logout():
     logout_user()
     return redirect(url_for("home"))
 
-# Run Flask App
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True, port=5001)
-CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///files.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
-
-db = SQLAlchemy(app)
-
-# Create uploads directory
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-class UserFile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(255), nullable=False)
-    original_filename = db.Column(db.String(255), nullable=False)
-    file_path = db.Column(db.String(500), nullable=False)
-    file_size = db.Column(db.Integer, nullable=False)
-    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
-    user_email = db.Column(db.String(255), nullable=True)
-
-@app.route('/')
-def index():
-    return "File Upload API Ready!"
-
+# File Upload Routes
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -210,7 +197,10 @@ def download_file(file_id):
     user_file = UserFile.query.get_or_404(file_id)
     return send_file(user_file.file_path, as_attachment=True, download_name=user_file.original_filename)
 
-if __name__ == '__main__':
+
+
+# Run Flask App
+if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True, port=5001)
