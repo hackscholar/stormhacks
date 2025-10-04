@@ -6,8 +6,16 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="dashboard-page">
     <div class="dashboard-container">
+        <div class="profile-dropdown">
+            <button class="profile-btn">Profile ▼</button>
+            <div class="dropdown-content">
+                <a href="#" id="settings">Settings</a>
+                <a href="#" id="profile">Profile</a>
+                <a href="#" id="signOut">Sign Out</a>
+            </div>
+        </div>
         <h2>Project Dashboard</h2>
         <div class="toggles-container">
             <div class="toggle-item" id="createProject">
@@ -23,7 +31,7 @@
                 <p>See all your projects</p>
             </div>
         </div>
-        <button id="logout">Logout</button>
+
     </div>
     <script src="dashboard.js"></script>
 </body>

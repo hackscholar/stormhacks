@@ -3,10 +3,17 @@ body {
     background: #f5f5f5;
     margin: 0;
     padding: 0;
+    min-height: 100vh;
+}
+
+body:not(.dashboard-page) {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+}
+
+body.dashboard-page {
+    background: white;
 }
 
 .container {
@@ -21,6 +28,14 @@ h2 {
     text-align: center;
     margin-bottom: 1.5rem;
     color: #333;
+}
+
+.dashboard-container h2 {
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    margin: 0;
+    text-align: left;
 }
 
 form {
@@ -80,27 +95,35 @@ a {
 }
 
 .dashboard-container {
-    background: white;
+    width: 100vw;
+    height: 100vh;
     padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    width: 500px;
-    text-align: center;
+    position: relative;
+    box-sizing: border-box;
 }
 
 .toggles-container {
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin: 2rem 0;
+    flex-direction: row;
+    gap: 2rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .toggle-item {
-    padding: 1.5rem;
+    width: 180px;
+    height: 180px;
+    padding: 1rem;
     border: 2px solid #ddd;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .toggle-item:hover {
@@ -119,11 +142,44 @@ a {
     font-size: 0.9rem;
 }
 
-#logout {
-    margin-top: 1rem;
-    background: #dc3545;
+.profile-dropdown {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
 }
 
-#logout:hover {
-    background: #c82333;
+.profile-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background: white;
+    min-width: 120px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    z-index: 1;
+}
+
+.dropdown-content a {
+    color: #333;
+    padding: 0.75rem 1rem;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background: #f8f9fa;
+}
+
+.profile-dropdown:hover .dropdown-content {
+    display: block;
 }

@@ -30,7 +30,20 @@ Object.keys(toggles).forEach(key => {
     toggles[key].element.addEventListener('click', toggles[key].action);
 });
 
-// Logout functionality
-document.getElementById('logout').addEventListener('click', function() {
-    window.location.href = 'index.html';
+// Profile dropdown functionality
+document.getElementById('settings').addEventListener('click', function(e) {
+    e.preventDefault();
+    console.log('Settings clicked');
+    // Functionality to be implemented
+});
+
+document.getElementById('profile').addEventListener('click', function(e) {
+    e.preventDefault();
+    console.log('Profile clicked');
+    // Functionality to be implemented
+});
+
+document.getElementById('signOut').addEventListener('click', function(e) {
+    e.preventDefault();
+    window.location.href = 'frontend/index.html';
 });
