@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - File Upload</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <div class="auth-container">
+            <h1>Dashboard</h1>
+            
+            <div class="upload-section">
+                <h2>Upload File</h2>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <input type="file" name="file" required>
+                    <input type="email" name="user_email" placeholder="Your email (optional)">
+                    <button type="submit">Upload</button>
+                </form>
+                
+                <div id="result"></div>
+            </div>
+            
+            <div class="files-section">
+                <div id="fileList"></div>
+            </div>
+            
+            <button onclick="window.location.href='index.html'" class="toggle-btn">Back to Login</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('http://localhost:5001/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                document.getElementById('result').innerHTML = 
+                    `<p>${result.message || result.error}</p>`;
+                loadFiles();
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<p>Error: ${error.message}</p>`;
+            }
+        };
+
+        async function loadFiles() {
+            try {
+                const response = await fetch('http://localhost:5001/files');
+                const files = await response.json();
+                document.getElementById('fileList').innerHTML = 
+                    '<h3>Uploaded Files:</h3>' + 
+                    files.map(f => `<p><a href="http://localhost:5001/download/${f.id}" target="_blank">${f.filename}</a> (${f.file_size} bytes)</p>`).join('');
+            } catch (error) {
+                console.error('Error loading files:', error);
+            }
+        }
+
+        loadFiles();
+    </script>
+</body>
+</html>
