@@ -26,10 +26,13 @@ toggleBtn.addEventListener('click', () => {
 
 document.getElementById('authForm').addEventListener('submit', (e) => {
     e.preventDefault();
+    const email = e.target.querySelector('input[type="email"]').value;
+    
     if (isSignUp) {
         alert('Sign up submitted!');
     } else {
-        // Redirect to dashboard after sign in
+        // Store logged-in email and redirect to dashboard
+        localStorage.setItem('loggedInEmail', email);
         window.location.href = 'dashboard.html';
     }
 });

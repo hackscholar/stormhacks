@@ -64,7 +64,11 @@ def upload_file():
 
 @app.route('/files', methods=['GET'])
 def get_files():
-    files = UserFile.query.all()
+    user_email = request.args.get('user_email')
+    if user_email:
+        files = UserFile.query.filter_by(user_email=user_email).all()
+    else:
+        files = UserFile.query.all()
     return jsonify([{
         'id': f.id,
         'filename': f.original_filename,

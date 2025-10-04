@@ -15,7 +15,6 @@
                 <h2>Upload File</h2>
                 <form id="uploadForm" enctype="multipart/form-data">
                     <input type="file" name="file" required>
-                    <input type="email" name="user_email" placeholder="Your email (optional)">
                     <button type="submit">Upload</button>
                 </form>
                 
@@ -34,6 +33,16 @@
         document.getElementById('uploadForm').onsubmit = async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
+            const loggedInEmail = localStorage.getItem('loggedInEmail');
+            
+            if (!loggedInEmail) {
+                alert('Please log in first');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Set the logged-in email as user_email
+            formData.set('user_email', loggedInEmail);
             
             try {
                 const response = await fetch('http://localhost:5001/upload', {
@@ -52,10 +61,11 @@
 
         async function loadFiles() {
             try {
-                const response = await fetch('http://localhost:5001/files');
+                const loggedInEmail = localStorage.getItem('loggedInEmail');
+                const response = await fetch(`http://localhost:5001/files?user_email=${loggedInEmail}`);
                 const files = await response.json();
                 document.getElementById('fileList').innerHTML = 
-                    '<h3>Uploaded Files:</h3>' + 
+                    '<h3>Your Uploaded Files:</h3>' + 
                     files.map(f => `<p><a href="http://localhost:5001/download/${f.id}" target="_blank">${f.filename}</a> (${f.file_size} bytes)</p>`).join('');
             } catch (error) {
                 console.error('Error loading files:', error);
