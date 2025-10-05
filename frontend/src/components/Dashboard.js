@@ -21,8 +21,9 @@ function Dashboard() {
       navigate('/create-project');
     } else if (toggleType === 'Join Project') {
       setShowJoinModal(true);
-    } else if (toggleType === 'View Projects') {
-      navigate('/projects');
+    } else {
+      console.log(`${toggleType} clicked`);
+      // Functionality to be implemented
     }
   };
 

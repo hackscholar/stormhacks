@@ -74,8 +74,16 @@ function CreateProject() {
       const result = await response.json();
       
       if (result.success) {
-        // Redirect to project view
-        navigate(`/project/${result.project.id}`);
+        // Store project data for timeline
+        const timelineData = {
+          name: projectName,
+          code: result.project.code,
+          collaborators: collaborators.filter(c => c.email && c.responsibilities.some(r => r.trim()))
+        };
+        localStorage.setItem('currentProject', JSON.stringify(timelineData));
+        
+        // Redirect to timeline
+        navigate('/timeline');
         
         // Send email invitations
         try {

@@ -282,181 +282,162 @@ p {
   width: 30px;
 }
 
-.fullscreen-container {
-  width: 100vw;
-  height: 100vh;
-  background: white;
-  padding: 2rem;
-  box-sizing: border-box;
-  overflow-y: auto;
-}
-
-.back-button {
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  background: #6c757d;
-  z-index: 1000;
-}
-
-.back-button:hover {
-  background: #5a6268;
-}
-
-.project-info {
-  margin: 2rem 0;
-}
-
-.collaborators-section {
-  margin: 2rem 0;
-}
-
-.collaborator-card {
-  border: 1px solid #ddd;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-}
-
 .project-workspace {
-  margin: 2rem 0;
   padding: 2rem;
-  border: 2px dashed #ddd;
-  border-radius: 8px;
-  text-align: center;
-  min-height: 300px;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
+  max-width: 1200px;
+  margin: 0 auto;
   background: white;
-  padding: 2rem;
   border-radius: 8px;
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.projects-modal {
-  max-width: 900px;
-  height: 600px;
+.add-milestone-btn {
+  background: #28a745;
+  margin-bottom: 2rem;
 }
 
-.modal-buttons {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.projects-layout {
-  display: flex;
-  height: 500px;
-  gap: 1rem;
-  margin: 1rem 0;
-}
-
-.projects-list {
-  width: 300px;
-  border-right: 1px solid #ddd;
-  padding-right: 1rem;
-  overflow-y: auto;
-}
-
-.project-list-item {
-  border: 1px solid #ddd;
+.milestone-form, .task-form {
+  background: #f8f9fa;
   padding: 1rem;
   border-radius: 8px;
-  margin-bottom: 0.5rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.project-list-item:hover {
-  border-color: #007bff;
-  background: #f8f9fa;
-}
-
-.project-list-item.selected {
-  border-color: #007bff;
-  background: #e3f2fd;
-}
-
-.project-list-item h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1rem;
-}
-
-.project-list-item p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #666;
-  text-align: left;
-}
-
-.project-preview {
-  flex: 1;
-  padding-left: 1rem;
-  overflow-y: auto;
-}
-
-.no-selection {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #666;
-}
-
-.collaborators-preview {
-  margin: 1rem 0;
-}
-
-.collab-preview {
   margin-bottom: 1rem;
-  padding: 0.5rem;
-  background: #f8f9fa;
-  border-radius: 4px;
 }
 
-.collab-preview ul {
-  margin: 0.5rem 0 0 0;
-  padding-left: 1.5rem;
-}
-
-.open-project-btn {
-  background: #28a745;
+.form-buttons {
+  display: flex;
+  gap: 0.5rem;
   margin-top: 1rem;
 }
 
-.open-project-btn:hover {
-  background: #218838;
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6c757d;
+  font-style: italic;
 }
 
-.projects-page {
-  width: 100vw;
-  height: 100vh;
-  background: white;
-  padding: 2rem;
-  box-sizing: border-box;
+
+
+.milestone-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.milestone-dates {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.progress-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 10px;
   overflow: hidden;
 }
 
-.no-projects {
-  text-align: center;
-  margin-top: 2rem;
+.progress-fill {
+  height: 100%;
+  background: #28a745;
+  transition: width 0.3s ease;
+}
+
+.assigned-members {
+  margin-bottom: 1rem;
+  color: #495057;
+}
+
+.add-task-btn {
+  background: #17a2b8;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+}
+
+.tasks-list {
+  margin-top: 1rem;
+}
+
+.task {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  margin-left: 2rem;
+  border-left: 3px solid #dee2e6;
+  background: #f8f9fa;
+  margin-bottom: 0.5rem;
+}
+
+.task-details {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+.status-select {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.status-select.to-do {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.status-select.in-progress {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-select.done {
+  background: #d4edda;
+  color: #155724;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #ddd;
+}
+
+.back-btn {
+  background: #6c757d;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.back-btn:hover {
+  background: #5a6268;
+}
+
+.timeline-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.timeline-header p {
+  margin: 0;
+  color: #666;
+}
+
+.milestone {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black:wght@400&family=Archivo:ital,wght@0,400;0,700;1,400;1,700&family=Arimo:ital,wght@0,400;0,700;1,400;1,700&display=swap');
