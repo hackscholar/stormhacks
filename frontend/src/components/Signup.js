@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 function Signup() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -19,7 +20,7 @@ function Signup() {
           'Accept': 'application/json'
         },
         mode: 'cors',
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ name, email, password })
       });
       
       console.log('Response status:', response.status);
@@ -41,27 +42,48 @@ function Signup() {
   };
 
   return (
-    <div className="container">
-      <h2>Sign Up</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Sign Up</button>
-      </form>
-      <p>Already have an account? <Link to="/">Sign In</Link></p>
-      {message && <div className="message success">{message}</div>}
+    <div className="desktop">
+      <div className="title">Synchronus</div>
+      <div className="subtitle">Be in sync with your team and create something amazing!</div>
+      <div className="form-container signup-form">
+        <div className="rounded-rectangle signup-rectangle"></div>
+        <div className="form-title">Sign-up</div>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            className="name-input"
+            placeholder="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+          <input
+            type="email"
+            className="email-input signup-email"
+            placeholder="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            className="password-input signup-password"
+            placeholder="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <button type="submit" className="signup-button">Sign Up</button>
+        </form>
+        <div className="signin-text">
+          already have an account? <Link to="/" className="signin-link">sign-in</Link>
+        </div>
+        {message && (
+          <div className={`message ${message.includes('successfully') ? 'success' : 'error'}`}>
+            {message}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
