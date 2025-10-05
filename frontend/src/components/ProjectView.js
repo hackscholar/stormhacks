@@ -1,3 +1,15 @@
+/**
+ * ProjectView Component
+ * 
+ * Main project interface that displays project details and provides tabbed navigation
+ * between different project features (Timeline, File Specs, Chatroom, Team).
+ * 
+ * Features:
+ * - Project information display with hover dropdown
+ * - Tab-based navigation between project sections
+ * - Responsive team member display
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Uploads from './uploads/uploads';
@@ -5,22 +17,31 @@ import Timeline from './timeline/timeline';
 import Chatroom from './chat/chatroom';
 
 function ProjectView() {
+  // Extract project ID from URL parameters
   const { projectId } = useParams();
-  const [project, setProject] = useState(null);
-  const [activeTab, setActiveTab] = useState('timeline');
-  const [showProjectInfo, setShowProjectInfo] = useState(false);
+  
+  // State management
+  const [project, setProject] = useState(null); // Current project data
+  const [activeTab, setActiveTab] = useState('timeline'); // Currently active tab
+  const [showProjectInfo, setShowProjectInfo] = useState(false); // Project info dropdown visibility
   const navigate = useNavigate();
 
+  // Initialize component data on mount or project ID change
   useEffect(() => {
     fetchProject();
   }, [projectId]);
 
+  /**
+   * Fetch project details from backend
+   * Stores project data in both state and localStorage for persistence
+   */
   const fetchProject = async () => {
     try {
       const response = await fetch(`http://127.0.0.1:5000/api/project/${projectId}`);
       const result = await response.json();
       if (result.success) {
         setProject(result.project);
+        // Store in localStorage for other components to access
         localStorage.setItem('currentProject', JSON.stringify(result.project));
       }
     } catch (error) {
@@ -34,7 +55,10 @@ function ProjectView() {
 
   return (
     <div className="fullscreen-container">
+      {/* Project Header */}
       <h2>{project.name}</h2>
+      
+      {/* Project Info Dropdown - Shows project details on hover */}
       <div 
         className="profile-dropdown"
         onMouseEnter={() => setShowProjectInfo(true)}
@@ -56,6 +80,7 @@ function ProjectView() {
 
       <div className="project-tabs">
         <div className="tab-buttons">
+          {/* Timeline Tab - Project milestones and tasks */}
           <button 
             className={`tab-button ${activeTab === 'timeline' ? 'active' : ''}`}
             onClick={() => setActiveTab('timeline')}
@@ -63,13 +88,8 @@ function ProjectView() {
             <img src="/icons/timeline-icon.svg" alt="Timeline" style={{width: '20px', height: '20px', marginRight: '8px'}} />
             Timeline
           </button>
-          <button 
-            className={`tab-button ${activeTab === 'chatroom' ? 'active' : ''}`}
-            onClick={() => setActiveTab('chatroom')}
-          >
-            <img src="/icons/chat-icon.svg" alt="Chat" style={{width: '20px', height: '20px', marginRight: '8px'}} />
-            Chatroom
-          </button>
+          
+          {/* File Specs Tab - File management and version control */}
           <button 
             className={`tab-button ${activeTab === 'files' ? 'active' : ''}`}
             onClick={() => setActiveTab('files')}
@@ -77,6 +97,17 @@ function ProjectView() {
             <img src="/icons/file-icon.svg" alt="Files" style={{width: '20px', height: '20px', marginRight: '8px'}} />
             File Specs
           </button>
+          
+          {/* Chatroom Tab - Team communication */}
+          <button 
+            className={`tab-button ${activeTab === 'chatroom' ? 'active' : ''}`}
+            onClick={() => setActiveTab('chatroom')}
+          >
+            <img src="/icons/chat-icon.svg" alt="Chat" style={{width: '20px', height: '20px', marginRight: '8px'}} />
+            Chatroom
+          </button>
+          
+          {/* Team Tab - Member overview */}
           <button 
             className={`tab-button ${activeTab === 'team' ? 'active' : ''}`}
             onClick={() => setActiveTab('team')}
@@ -86,10 +117,18 @@ function ProjectView() {
           </button>
         </div>
         
+        {/* Tab Content - Renders the active tab component */}
         <div className="tab-content">
+          {/* Timeline Component - Project milestones and task management */}
           {activeTab === 'timeline' && <Timeline />}
+          
+          {/* Chatroom Component - Team communication */}
           {activeTab === 'chatroom' && <Chatroom />}
+          
+          {/* Uploads Component - File management system */}
           {activeTab === 'files' && <Uploads />}
+          
+          {/* Team Tab - Custom team member display */}
           {activeTab === 'team' && (
             <div style={{
               minHeight: '100vh',

@@ -1,6 +1,21 @@
+/**
+ * Uploads Component
+ * 
+ * File management system with version control capabilities.
+ * Provides functionality for:
+ * - File upload with folder organization
+ * - Folder creation and management
+ * - Version history tracking
+ * - File preview and download
+ * - Snapshot creation and restoration
+ * 
+ * Features modern card-based UI matching the application's design system.
+ */
+
 import React, { useState, useEffect } from 'react';
 
 function Uploads() {
+  // Component state (minimal usage due to global window functions)
   const [showUpload, setShowUpload] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState('');
@@ -29,7 +44,11 @@ function Uploads() {
   };
 
   useEffect(() => {
-    // Initialize upload functionality
+    /**
+     * Initialize upload functionality
+     * Sets up global window functions for file management operations
+     * This approach allows dynamic HTML content to call these functions
+     */
     const initializeUploadFunctions = () => {
           const uploadDiv = document.createElement('div');
           uploadDiv.className = 'upload-component';
@@ -61,9 +80,15 @@ function Uploads() {
               </div>
             </div>
           `;
-          // Functions are now available globally
+          /**
+           * Global File Management Functions
+           * These functions are attached to window object to be accessible
+           * from dynamically generated HTML content
+           */
           
-          // Add global functions
+          /**
+           * Quick file upload - Opens file picker dialog
+           */
           window.quickUpload = () => {
             const fileInput = document.getElementById('hidden-file-input');
             fileInput.click();
@@ -81,10 +106,14 @@ function Uploads() {
             }
           }, 100);
           
+          /**
+           * Show folder selection modal for file upload
+           * Displays available folders and allows user to choose destination
+           */
           window.showFolderSelection = (file) => {
             const folders = window.currentFolders || [];
             
-            // Create modal dialog
+            // Create modal dialog with app styling
             const modal = document.createElement('div');
             modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;';
             
@@ -115,6 +144,10 @@ function Uploads() {
             window.currentModal = modal;
           };
           
+          /**
+           * Create new folder
+           * @param {string} parentPath - Parent folder path (optional)
+           */
           window.createFolder = async (parentPath = '') => {
             const folderName = prompt(`Enter folder name${parentPath ? ` (inside ${parentPath})` : ''}:`);
             if (!folderName) return;
@@ -148,6 +181,10 @@ function Uploads() {
             }
           };
           
+          /**
+           * Load and display folder structure
+           * Fetches folder tree from backend and renders with modern card styling
+           */
           window.loadFolders = async () => {
             try {
               const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
@@ -165,17 +202,19 @@ function Uploads() {
               // Only show folders for dropdown (all folders)
               window.currentFolders = window.allFolders;
               
-              folderList.innerHTML = '<h4>File Structure:</h4>';
+              folderList.innerHTML = '';
               
-              // Add root folder
+              // Add root folder with new styling
               folderList.innerHTML += `
-                <div style="margin: 5px 0; padding: 5px; background: #e9ecef; border-radius: 3px;">
-                  <span style="cursor: pointer;" onclick="window.toggleFolder('root')">
-                    folder/Root folder <span id="root-toggle">▶</span>
-                  </span>
-                  <button onclick="window.createFolder('root')" style="margin-left: 10px; padding: 2px 6px; font-size: 11px; background: #28a745; color: white; border: none; border-radius: 2px; cursor: pointer;">+ Subfolder</button>
+                <div style="margin: 10px 0; padding: 15px 20px; background: rgba(255, 250, 250, 0.8); border-radius: 20px; border: 1px solid #f0f0f0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="cursor: pointer; color: #470F59; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 10px;" onclick="window.toggleFolder('root')">
+                      Root folder <span id="root-toggle" style="color: #8178A1;">▶</span>
+                    </span>
+                    <button onclick="window.createFolder('root')" style="padding: 8px 15px; background: #470F59; color: white; border: none; border-radius: 15px; cursor: pointer; font-size: 12px; font-weight: 600;">+ Subfolder</button>
+                  </div>
+                  <div id="root-files" style="display: none; margin-top: 15px; padding-left: 20px;"></div>
                 </div>
-                <div id="root-files" style="display: none; margin-left: 50px; padding: 5px;"></div>
               `;
               
               // Don't show any folders at top level - they will appear when root is expanded
@@ -184,6 +223,10 @@ function Uploads() {
             }
           };
           
+          /**
+           * Toggle folder expansion to show/hide contents
+           * @param {string} folderPath - Path of folder to toggle
+           */
           window.toggleFolder = async (folderPath) => {
             const safeId = folderPath.replace(/\//g, '-');
             const filesDiv = document.getElementById(`${safeId}-files`);
@@ -203,33 +246,40 @@ function Uploads() {
                     if (item.type === 'folder') {
                       // Calculate indentation based on folder depth
                       const folderDepth = item.path.split('/').length;
-                      const indent = folderDepth * 50;
+                      const indent = folderDepth * 20;
                       
-                      // Add subfolder with full functionality
+                      // Add subfolder with new styling
                       content += `
-                        <div style="margin: 5px 0; padding: 5px; background: #f8f9fa; border-radius: 3px; margin-left: ${indent}px;">
-                          <span style="cursor: pointer;" onclick="window.toggleFolder('${item.path}')">
-                            folder/${item.name} <span id="${item.path.replace(/\//g, '-')}-toggle">▶</span>
-                          </span>
-                          <button onclick="window.createFolder('${item.path}')" style="margin-left: 10px; padding: 2px 6px; font-size: 11px; background: #28a745; color: white; border: none; border-radius: 2px; cursor: pointer;">+ Subfolder</button>
-                          <button onclick="window.deleteFolder('${item.path}', '${item.name}')" style="margin-left: 5px; padding: 2px 6px; font-size: 11px; background: #dc3545; color: white; border: none; border-radius: 2px; cursor: pointer;">Delete</button>
+                        <div style="margin: 8px 0; padding: 12px 15px; background: rgba(113, 120, 161, 0.1); border-radius: 15px; margin-left: ${indent}px; border-left: 3px solid #8178A1;">
+                          <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <span style="cursor: pointer; color: #470F59; font-weight: 500; display: flex; align-items: center; gap: 8px;" onclick="window.toggleFolder('${item.path}')">
+                              ${item.name} <span id="${item.path.replace(/\//g, '-')}-toggle" style="color: #8178A1;">▶</span>
+                            </span>
+                            <div style="display: flex; gap: 5px;">
+                              <button onclick="window.createFolder('${item.path}')" style="padding: 4px 8px; background: #470F59; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 11px;">+ Sub</button>
+                              <button onclick="window.deleteFolder('${item.path}', '${item.name}')" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 11px;">Delete</button>
+                            </div>
+                          </div>
+                          <div id="${item.path.replace(/\//g, '-')}-files" style="display: none; margin-top: 10px;"></div>
                         </div>
-                        <div id="${item.path.replace(/\//g, '-')}-files" style="display: none; margin-left: ${indent + 50}px; padding: 5px;"></div>
                       `;
                     } else {
                       // Calculate indentation for files
                       const folderDepth = folderPath === 'root' ? 0 : folderPath.split('/').length;
-                      const fileIndent = (folderDepth + 1) * 50;
+                      const fileIndent = (folderDepth + 1) * 20;
                       
-                      // Add file with click handler
+                      // Add file with new styling
                       const filePath = folderPath === 'root' ? item.name : `${folderPath}/${item.name}`;
-                      content += `<div style="margin: 3px 0; padding: 4px; background: #fff; border-left: 2px solid #007bff; font-size: 13px; margin-left: ${fileIndent}px; cursor: pointer;" onclick="window.previewFile('${filePath}', '${item.name}')">
-                        file/${item.name} <span style="color: #666;">(${item.size} bytes)</span>
+                      content += `<div style="margin: 5px 0; padding: 10px 15px; background: white; border-radius: 12px; border-left: 3px solid #470F59; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-left: ${fileIndent}px; transition: all 0.2s ease;" onclick="window.previewFile('${filePath}', '${item.name}')" onmouseover="this.style.boxShadow='0 2px 6px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.1)'">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="color: #470F59; font-weight: 500;">${item.name}</span>
+                          <span style="color: #7C7171; font-size: 12px; margin-left: auto;">${item.size} bytes</span>
+                        </div>
                       </div>`;
                     }
                   });
                 } else {
-                  content = '<div style="color: #666; font-size: 12px;">Empty folder</div>';
+                  content = '<div style="color: #7C7171; font-size: 14px; text-align: center; padding: 20px; font-style: italic;">Empty folder</div>';
                 }
                 
                 filesDiv.innerHTML = content;
@@ -247,6 +297,9 @@ function Uploads() {
             }
           };
           
+          /**
+           * Confirm file upload to selected folder
+           */
           window.confirmUpload = () => {
             const dropdown = document.getElementById('folder-dropdown');
             const selectedFolder = dropdown.value;
@@ -262,6 +315,11 @@ function Uploads() {
             }
           };
           
+          /**
+           * Upload file to specified folder
+           * @param {File} file - File object to upload
+           * @param {string} folderName - Destination folder name
+           */
           window.uploadSelectedFile = async (file, folderName) => {
             const statusDiv = document.getElementById('upload-status');
             
@@ -287,6 +345,11 @@ function Uploads() {
             }
           };
           
+          /**
+           * Delete folder and all its contents
+           * @param {string} folderPath - Path of folder to delete
+           * @param {string} folderName - Display name of folder
+           */
           window.deleteFolder = async (folderPath, folderName) => {
             const confirmed = confirm(`Are you sure you want to delete the folder "${folderName}" and all its contents? This action cannot be undone.`);
             
@@ -316,6 +379,12 @@ function Uploads() {
             }
           };
           
+          /**
+           * Preview file content in modal
+           * Supports text files and images
+           * @param {string} filePath - Path to file
+           * @param {string} fileName - Display name of file
+           */
           window.previewFile = async (filePath, fileName) => {
             try {
               const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
@@ -375,12 +444,13 @@ function Uploads() {
             
             const historyDiv = document.getElementById('version-history');
             const entry = document.createElement('div');
-            entry.style.cssText = 'margin: 3px 0; padding: 4px; background: #f8f9fa; border-radius: 2px; border-left: 3px solid ' + (action === 'Added' ? '#28a745' : '#dc3545') + ';';
+            const color = action === 'Added' ? '#470F59' : '#dc3545';
+            entry.style.cssText = 'margin: 8px 0; padding: 12px 15px; background: white; border-radius: 12px; border-left: 3px solid ' + color + '; box-shadow: 0 1px 3px rgba(0,0,0,0.1);';
             
             entry.innerHTML = `
-              <div style="font-weight: bold; color: ${action === 'Added' ? '#28a745' : '#dc3545'};">${action} ${type}</div>
-              <div>${item}</div>
-              <div style="color: #666; font-size: 10px;">${dateStr} ${timeStr}</div>
+              <div style="font-weight: 600; color: ${color}; font-size: 13px; margin-bottom: 4px;">${action} ${type}</div>
+              <div style="color: #470F59; font-size: 12px; margin-bottom: 6px;">${item}</div>
+              <div style="color: #7C7171; font-size: 10px;">${dateStr} ${timeStr}</div>
             `;
             
             historyDiv.insertBefore(entry, historyDiv.firstChild);
@@ -403,26 +473,29 @@ function Uploads() {
               if (result.history && result.history.length > 0) {
                 result.history.forEach(entry => {
                   const entryDiv = document.createElement('div');
-                  const color = entry.action === 'Added' ? '#28a745' : entry.action === 'Snapshot' ? '#17a2b8' : '#dc3545';
-                  entryDiv.style.cssText = 'margin: 3px 0; padding: 4px; background: #f8f9fa; border-radius: 2px; border-left: 3px solid ' + color + ';';
+                  const color = entry.action === 'Added' ? '#470F59' : entry.action === 'Snapshot' ? '#8178A1' : '#dc3545';
+                  entryDiv.style.cssText = 'margin: 8px 0; padding: 12px 15px; background: white; border-radius: 12px; border-left: 3px solid ' + color + '; box-shadow: 0 1px 3px rgba(0,0,0,0.1);';
                   
                   entryDiv.innerHTML = `
-                    <div style="font-weight: bold; color: ${color};">${entry.action} ${entry.type}</div>
-                    <div>${entry.item}</div>
-                    <div style="color: #666; font-size: 10px;">${entry.timestamp}</div>
-                    <button onclick="window.revertToVersion(${entry.id})" style="margin-top: 3px; padding: 2px 6px; font-size: 10px; background: #ffc107; color: black; border: none; border-radius: 2px; cursor: pointer;">Revert</button>
+                    <div style="font-weight: 600; color: ${color}; font-size: 13px; margin-bottom: 4px;">${entry.action} ${entry.type}</div>
+                    <div style="color: #470F59; font-size: 12px; margin-bottom: 6px;">${entry.item}</div>
+                    <div style="color: #7C7171; font-size: 10px; margin-bottom: 8px;">${entry.timestamp}</div>
+                    <button onclick="window.revertToVersion(${entry.id})" style="padding: 4px 10px; background: #470F59; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 10px; font-weight: 500;">Revert</button>
                   `;
                   
                   historyDiv.appendChild(entryDiv);
                 });
               } else {
-                historyDiv.innerHTML = '<div style="color: #666; font-style: italic;">No history yet</div>';
+                historyDiv.innerHTML = '<div style="color: #7C7171; font-style: italic; text-align: center; padding: 20px; font-size: 12px;">No history yet</div>';
               }
             } catch (error) {
               console.error('Failed to load history');
             }
           };
           
+          /**
+           * Create named snapshot of current file structure
+           */
           window.saveSnapshot = async () => {
             const snapshotName = prompt('Enter a name for this snapshot:');
             if (!snapshotName) return;
@@ -450,6 +523,10 @@ function Uploads() {
             }
           };
           
+          /**
+           * Revert file structure to previous version
+           * @param {number} historyId - ID of history entry to revert to
+           */
           window.revertToVersion = async (historyId) => {
             const confirmed = confirm('Are you sure you want to revert to this version? This will restore the entire file structure from that point in time.');
             
@@ -476,7 +553,7 @@ function Uploads() {
             }
           };
           
-          // Load folders and history immediately
+          // Initialize data loading
           window.loadFolders();
           window.loadHistory();
     };

@@ -28,6 +28,12 @@ def init_upload_db():
             UNIQUE(path, project_id)
         )
     ''')
+     
+    # Add project_id column if it doesn't exist (migration)
+    try:
+        cursor.execute('ALTER TABLE folders ADD COLUMN project_id TEXT')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
     
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS uploaded_files (
@@ -42,6 +48,12 @@ def init_upload_db():
         )
     ''')
     
+    # Add project_id column if it doesn't exist (migration)
+    try:
+        cursor.execute('ALTER TABLE uploaded_files ADD COLUMN project_id TEXT')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,6 +65,12 @@ def init_upload_db():
         )
     ''')
     
+    # Add project_id column if it doesn't exist (migration)
+    try:
+        cursor.execute('ALTER TABLE history ADD COLUMN project_id TEXT')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS snapshots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,6 +79,12 @@ def init_upload_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Add project_id column if it doesn't exist (migration)
+    try:
+        cursor.execute('ALTER TABLE snapshots ADD COLUMN project_id TEXT')
+    except sqlite3.OperationalError:
+        pass  # Column already exists
     
     conn.commit()
     conn.close()
@@ -142,6 +166,8 @@ def create_folder():
     parent_path = data.get('parent_path', '')
     project_id = data.get('project_id')
     
+    print(f'Create folder request: folder_name={folder_name}, parent_path={parent_path}, project_id={project_id}')
+    
     if not folder_name or not project_id:
         return jsonify({'success': False, 'message': 'Folder name and project ID required'})
     
@@ -152,13 +178,17 @@ def create_folder():
         else:
             full_path = folder_name
         
+        print(f'Full path: {full_path}')
+        
         # Create physical folder in project directory
         physical_path = os.path.join(UPLOAD_FOLDER, project_id, *full_path.split('/'))
+        print(f'Physical path: {physical_path}')
         
         if os.path.exists(physical_path):
             return jsonify({'success': False, 'message': 'Folder already exists'})
         
         os.makedirs(physical_path, exist_ok=True)
+        print(f'Folder created successfully at: {physical_path}')
         
         # Save to database
         conn = sqlite3.connect('uploads.db')
@@ -187,7 +217,8 @@ def create_folder():
         
         return jsonify({'success': True, 'message': 'Folder created successfully', 'path': full_path})
     except Exception as e:
-        return jsonify({'success': False, 'message': 'Failed to create folder'})
+        print(f'Error creating folder: {str(e)}')
+        return jsonify({'success': False, 'message': f'Failed to create folder: {str(e)}'})
 
 @uploads_bp.route('/api/folder-tree', methods=['GET'])
 @cross_origin()
