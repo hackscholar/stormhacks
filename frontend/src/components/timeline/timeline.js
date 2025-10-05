@@ -134,10 +134,10 @@ function ProjectTimeline() {
 
   const deleteMilestone = async (milestoneId, skipConfirm = false) => {
     if (!skipConfirm && !window.confirm('Are you sure you want to delete this milestone?')) return;
-    
+
     // Immediately remove from UI
     setMilestones(prev => prev.filter(m => m.id !== milestoneId));
-    
+
     // Try to delete from backend
     try {
       await fetch(`http://127.0.0.1:5000/api/milestone/${milestoneId}`, {
@@ -178,11 +178,11 @@ function ProjectTimeline() {
       const result = await response.json();
       if (result.success) {
         await loadMilestones(projectData.id);
-        
+
         // Check if all tasks in milestone are completed
         const milestone = milestones.find(m => m.id === milestoneId);
         if (milestone && milestone.tasks.length > 0) {
-          const allCompleted = milestone.tasks.every(task => 
+          const allCompleted = milestone.tasks.every(task =>
             task.id === taskId ? newStatus === 'Done' : task.status === 'Done'
           );
           if (allCompleted) {
@@ -301,7 +301,7 @@ function ProjectTimeline() {
           ) : (
             <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
               {milestones.map(milestone => (
-                <button key={milestone.id} 
+                <button key={milestone.id}
                   onClick={() => setSelectedMilestone(selectedMilestone === milestone.id ? null : milestone.id)}
                   style={{
                     width: '100%',
@@ -314,7 +314,7 @@ function ProjectTimeline() {
                     textAlign: 'left'
                   }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '5px' }}>
-                    <div 
+                    <div
                       style={{ color: 'white', fontWeight: '600', fontSize: '14px', display: 'flex', alignItems: 'center', position: 'relative' }}
                       onMouseEnter={() => setHoveredMilestone(milestone.id)}
                       onMouseLeave={() => setHoveredMilestone(null)}
@@ -390,16 +390,16 @@ function ProjectTimeline() {
                               cursor: 'help',
                               flex: 1
                             }}
-                            onMouseEnter={(e) => {
-                              setHoveredTask(task.id);
-                              setMousePosition({ x: e.clientX, y: e.clientY });
-                            }}
-                            onMouseMove={(e) => {
-                              if (hoveredTask === task.id) {
+                              onMouseEnter={(e) => {
+                                setHoveredTask(task.id);
                                 setMousePosition({ x: e.clientX, y: e.clientY });
-                              }
-                            }}
-                            onMouseLeave={() => setHoveredTask(null)}>
+                              }}
+                              onMouseMove={(e) => {
+                                if (hoveredTask === task.id) {
+                                  setMousePosition({ x: e.clientX, y: e.clientY });
+                                }
+                              }}
+                              onMouseLeave={() => setHoveredTask(null)}>
                               {task.title}
                             </span>
                             <select
@@ -437,8 +437,8 @@ function ProjectTimeline() {
               ))}
             </div>
           )}
-          <button 
-            onClick={() => setShowMilestoneForm(true)} 
+          <button
+            onClick={() => setShowMilestoneForm(true)}
             style={{
               width: '100%',
               background: 'rgba(255, 249, 196, 0.6)',
@@ -458,8 +458,8 @@ function ProjectTimeline() {
       </div>
 
       {/* Main Content */}
-      <div style={{ 
-        flex: 1, 
+      <div style={{
+        flex: 1,
         padding: '40px',
         display: 'flex',
         justifyContent: 'center',
@@ -504,7 +504,7 @@ function ProjectTimeline() {
                 type="text"
                 placeholder="Milestone Title"
                 value={milestoneForm.title}
-                onChange={(e) => setMilestoneForm({...milestoneForm, title: e.target.value})}
+                onChange={(e) => setMilestoneForm({ ...milestoneForm, title: e.target.value })}
                 style={{
                   padding: '15px 20px',
                   border: '2px solid #ddd',
@@ -517,7 +517,7 @@ function ProjectTimeline() {
                   type="date"
                   placeholder="Start Date"
                   value={milestoneForm.startDate}
-                  onChange={(e) => setMilestoneForm({...milestoneForm, startDate: e.target.value})}
+                  onChange={(e) => setMilestoneForm({ ...milestoneForm, startDate: e.target.value })}
                   style={{
                     padding: '15px 20px',
                     border: '2px solid #ddd',
@@ -529,7 +529,7 @@ function ProjectTimeline() {
                   type="date"
                   placeholder="End Date"
                   value={milestoneForm.endDate}
-                  onChange={(e) => setMilestoneForm({...milestoneForm, endDate: e.target.value})}
+                  onChange={(e) => setMilestoneForm({ ...milestoneForm, endDate: e.target.value })}
                   style={{
                     padding: '15px 20px',
                     border: '2px solid #ddd',
@@ -540,7 +540,7 @@ function ProjectTimeline() {
               </div>
               <select
                 value={milestoneForm.assignedMembers}
-                onChange={(e) => setMilestoneForm({...milestoneForm, assignedMembers: e.target.value})}
+                onChange={(e) => setMilestoneForm({ ...milestoneForm, assignedMembers: e.target.value })}
                 style={{
                   padding: '15px 20px',
                   border: '2px solid #ddd',
@@ -554,7 +554,7 @@ function ProjectTimeline() {
                 ))}
               </select>
             </div>
-            
+
             <div style={{ marginBottom: '20px' }}>
               <h4 style={{ color: '#333', marginBottom: '10px' }}>Tasks (Required - at least 1)</h4>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '10px', marginBottom: '10px' }}>
@@ -562,7 +562,7 @@ function ProjectTimeline() {
                   type="text"
                   placeholder="Task Title"
                   value={tempTask.title}
-                  onChange={(e) => setTempTask({...tempTask, title: e.target.value})}
+                  onChange={(e) => setTempTask({ ...tempTask, title: e.target.value })}
                   style={{ padding: '10px', border: '1px solid #ddd', borderRadius: '5px' }}
                 />
                 <select
@@ -570,7 +570,7 @@ function ProjectTimeline() {
                   onChange={(e) => {
                     const selected = getCollaboratorOptions().find(opt => opt.display === e.target.value);
                     setTempTask({
-                      ...tempTask, 
+                      ...tempTask,
                       assignee: selected ? selected.email : '',
                       responsibility: selected ? selected.responsibility : ''
                     });
@@ -593,7 +593,7 @@ function ProjectTimeline() {
                   cursor: 'pointer'
                 }}>+</button>
               </div>
-              
+
               {milestoneForm.tasks.length > 0 && (
                 <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '5px', padding: '10px' }}>
                   {milestoneForm.tasks.map(task => (
@@ -619,7 +619,7 @@ function ProjectTimeline() {
                 </div>
               )}
             </div>
-            
+
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
               <button onClick={addMilestone} style={{
                 background: '#28a745',
@@ -732,12 +732,12 @@ function ProjectTimeline() {
           </div>
           <style>{`
             ${Array.from({ length: 100 }).map((_, i) => {
-              const startX = 50 + (Math.random() - 0.5) * 20;
-              const startY = 50 + (Math.random() - 0.5) * 20;
-              const endX = Math.random() * 100;
-              const endY = Math.random() * 100;
-              const rotation = Math.random() * 720;
-              return `
+            const startX = 50 + (Math.random() - 0.5) * 20;
+            const startY = 50 + (Math.random() - 0.5) * 20;
+            const endX = Math.random() * 100;
+            const endY = Math.random() * 100;
+            const rotation = Math.random() * 720;
+            return `
                 @keyframes confetti-${i} {
                   0% {
                     transform: translate(0, 0) rotate(0deg) scale(1);
@@ -749,7 +749,7 @@ function ProjectTimeline() {
                   }
                 }
               `;
-            }).join('')}
+          }).join('')}
           `}</style>
         </div>
       )}
@@ -811,7 +811,7 @@ function ProjectTimeline() {
               type="text"
               placeholder="Task Title"
               value={taskForm.title}
-              onChange={(e) => setTaskForm({...taskForm, title: e.target.value})}
+              onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -825,7 +825,7 @@ function ProjectTimeline() {
             <input
               type="date"
               value={taskForm.dueDate}
-              onChange={(e) => setTaskForm({...taskForm, dueDate: e.target.value})}
+              onChange={(e) => setTaskForm({ ...taskForm, dueDate: e.target.value })}
               style={{
                 width: '100%',
                 padding: '12px',
@@ -840,7 +840,7 @@ function ProjectTimeline() {
               onChange={(e) => {
                 const selected = getCollaboratorOptions().find(opt => opt.display === e.target.value);
                 setTaskForm({
-                  ...taskForm, 
+                  ...taskForm,
                   assignee: selected ? selected.email : '',
                   responsibility: selected ? selected.responsibility : ''
                 });
