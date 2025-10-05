@@ -91,22 +91,80 @@ function ProjectView() {
           {activeTab === 'chatroom' && <Chatroom />}
           {activeTab === 'files' && <Uploads />}
           {activeTab === 'team' && (
-            <div>
-              <h3>Team Members</h3>
-              <div className="collaborators-horizontal">
-                {project.collaborators.map((collab, index) => (
-                  <div key={index} className="collaborator-card" style={{minWidth: '200px', flex: '0 0 auto'}}>
-                    <h4 style={{margin: '0 0 0.5rem 0', fontSize: '0.9rem'}}>{collab.email}</h4>
-                    <ul style={{margin: 0, padding: '0 0 0 1rem', fontSize: '0.8rem'}}>
-                      {collab.responsibilities.map((resp, i) => (
-                        <li key={i}>{resp}</li>
-                      ))}
-                    </ul>
+            <div style={{
+              minHeight: '100vh',
+              background: '#8178A1',
+              display: 'flex',
+              fontFamily: 'Arial, sans-serif'
+            }}>
+              <div style={{
+                width: '350px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                padding: '20px',
+                backdropFilter: 'blur(10px)',
+                borderRight: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                <h3 style={{ color: 'white', margin: '0 0 20px 0', fontSize: '1.5rem' }}>Team Overview</h3>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '15px',
+                  padding: '20px',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{ color: 'white', fontSize: '14px' }}>
+                    <div style={{ marginBottom: '10px' }}><strong>Total Members:</strong> {project.collaborators.length}</div>
+                    <div style={{ marginBottom: '10px' }}><strong>Project Code:</strong> {project.code}</div>
+                    <div><strong>Creator:</strong> {project.creator}</div>
                   </div>
-                ))}
+                </div>
+              </div>
+              <div style={{
+                flex: 1,
+                padding: '40px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+              }}>
+                <h2 style={{ color: 'white', marginBottom: '30px', fontSize: '2rem' }}>Team Members</h2>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                  gap: '20px',
+                  width: '100%',
+                  maxWidth: '1200px'
+                }}>
+                  {project.collaborators.map((collab, index) => (
+                    <div key={index} style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: '15px',
+                      padding: '20px',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)'
+                    }}>
+                      <h4 style={{
+                        margin: '0 0 15px 0',
+                        fontSize: '1.1rem',
+                        color: 'white',
+                        fontWeight: '600'
+                      }}>{collab.email}</h4>
+                      <div style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '14px' }}>
+                        <strong style={{ color: 'white' }}>Responsibilities:</strong>
+                        <ul style={{
+                          margin: '8px 0 0 0',
+                          padding: '0 0 0 20px',
+                          listStyle: 'disc'
+                        }}>
+                          {collab.responsibilities.map((resp, i) => (
+                            <li key={i} style={{ marginBottom: '5px' }}>{resp}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          )}
+          )})
         </div>
       </div>
 
