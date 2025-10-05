@@ -1,6 +1,21 @@
+/**
+ * Uploads Component
+ * 
+ * File management system with version control capabilities.
+ * Provides functionality for:
+ * - File upload with folder organization
+ * - Folder creation and management
+ * - Version history tracking
+ * - File preview and download
+ * - Snapshot creation and restoration
+ * 
+ * Features modern card-based UI matching the application's design system.
+ */
+
 import React, { useState, useEffect } from 'react';
 
 function Uploads() {
+  // Component state (minimal usage due to global window functions)
   const [showUpload, setShowUpload] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState('');
@@ -29,7 +44,11 @@ function Uploads() {
   };
 
   useEffect(() => {
-    // Initialize upload functionality
+    /**
+     * Initialize upload functionality
+     * Sets up global window functions for file management operations
+     * This approach allows dynamic HTML content to call these functions
+     */
     const initializeUploadFunctions = () => {
           const uploadDiv = document.createElement('div');
           uploadDiv.className = 'upload-component';
@@ -61,9 +80,15 @@ function Uploads() {
               </div>
             </div>
           `;
-          // Functions are now available globally
+          /**
+           * Global File Management Functions
+           * These functions are attached to window object to be accessible
+           * from dynamically generated HTML content
+           */
           
-          // Add global functions
+          /**
+           * Quick file upload - Opens file picker dialog
+           */
           window.quickUpload = () => {
             const fileInput = document.getElementById('hidden-file-input');
             fileInput.click();
@@ -81,10 +106,14 @@ function Uploads() {
             }
           }, 100);
           
+          /**
+           * Show folder selection modal for file upload
+           * Displays available folders and allows user to choose destination
+           */
           window.showFolderSelection = (file) => {
             const folders = window.currentFolders || [];
             
-            // Create modal dialog
+            // Create modal dialog with app styling
             const modal = document.createElement('div');
             modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;';
             
@@ -115,6 +144,10 @@ function Uploads() {
             window.currentModal = modal;
           };
           
+          /**
+           * Create new folder
+           * @param {string} parentPath - Parent folder path (optional)
+           */
           window.createFolder = async (parentPath = '') => {
             const folderName = prompt(`Enter folder name${parentPath ? ` (inside ${parentPath})` : ''}:`);
             if (!folderName) return;
@@ -148,6 +181,10 @@ function Uploads() {
             }
           };
           
+          /**
+           * Load and display folder structure
+           * Fetches folder tree from backend and renders with modern card styling
+           */
           window.loadFolders = async () => {
             try {
               const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
@@ -186,6 +223,10 @@ function Uploads() {
             }
           };
           
+          /**
+           * Toggle folder expansion to show/hide contents
+           * @param {string} folderPath - Path of folder to toggle
+           */
           window.toggleFolder = async (folderPath) => {
             const safeId = folderPath.replace(/\//g, '-');
             const filesDiv = document.getElementById(`${safeId}-files`);
@@ -256,6 +297,9 @@ function Uploads() {
             }
           };
           
+          /**
+           * Confirm file upload to selected folder
+           */
           window.confirmUpload = () => {
             const dropdown = document.getElementById('folder-dropdown');
             const selectedFolder = dropdown.value;
@@ -271,6 +315,11 @@ function Uploads() {
             }
           };
           
+          /**
+           * Upload file to specified folder
+           * @param {File} file - File object to upload
+           * @param {string} folderName - Destination folder name
+           */
           window.uploadSelectedFile = async (file, folderName) => {
             const statusDiv = document.getElementById('upload-status');
             
@@ -296,6 +345,11 @@ function Uploads() {
             }
           };
           
+          /**
+           * Delete folder and all its contents
+           * @param {string} folderPath - Path of folder to delete
+           * @param {string} folderName - Display name of folder
+           */
           window.deleteFolder = async (folderPath, folderName) => {
             const confirmed = confirm(`Are you sure you want to delete the folder "${folderName}" and all its contents? This action cannot be undone.`);
             
@@ -325,6 +379,12 @@ function Uploads() {
             }
           };
           
+          /**
+           * Preview file content in modal
+           * Supports text files and images
+           * @param {string} filePath - Path to file
+           * @param {string} fileName - Display name of file
+           */
           window.previewFile = async (filePath, fileName) => {
             try {
               const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
@@ -433,6 +493,9 @@ function Uploads() {
             }
           };
           
+          /**
+           * Create named snapshot of current file structure
+           */
           window.saveSnapshot = async () => {
             const snapshotName = prompt('Enter a name for this snapshot:');
             if (!snapshotName) return;
@@ -460,6 +523,10 @@ function Uploads() {
             }
           };
           
+          /**
+           * Revert file structure to previous version
+           * @param {number} historyId - ID of history entry to revert to
+           */
           window.revertToVersion = async (historyId) => {
             const confirmed = confirm('Are you sure you want to revert to this version? This will restore the entire file structure from that point in time.');
             
@@ -486,7 +553,7 @@ function Uploads() {
             }
           };
           
-          // Load folders and history immediately
+          // Initialize data loading
           window.loadFolders();
           window.loadHistory();
     };
