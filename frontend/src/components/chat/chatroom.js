@@ -374,7 +374,9 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
         padding: sidebarCollapsed ? '30px 10px' : '30px 20px',
         boxShadow: '4px 0 4px rgba(0,0,0,0.1)',
         transition: 'all 0.3s ease',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '30px' }}>
           {!sidebarCollapsed && (
@@ -480,6 +482,25 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
         >
           {sidebarCollapsed ? '+' : '+ New Topic'}
         </button>
+        
+        <div style={{ flex: 1 }} />
+        
+        <button
+          onClick={() => window.history.back()}
+          style={{
+            width: '100%',
+            padding: '15px',
+            background: '#7C7171',
+            color: 'white',
+            border: 'none',
+            borderRadius: '20px',
+            fontSize: '16px',
+            fontWeight: '700',
+            cursor: 'pointer'
+          }}
+        >
+          {sidebarCollapsed ? '←' : '← Back to Project'}
+        </button>
       </div>
 
       {/* Main Chat Area */}
@@ -533,7 +554,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
                 margin: 0,
                 fontSize: '32px',
                 fontWeight: '700'
-              }}># {activeChat.name}</h1>
+              }}>{activeChat.name}</h1>
               
               <button
                 onClick={() => {
