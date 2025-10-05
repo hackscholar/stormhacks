@@ -8,7 +8,9 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
   const [newTopicName, setNewTopicName] = useState('');
   const [activeChatId, setActiveChatId] = useState(chatId);
   const [chatrooms, setChatrooms] = useState(() => {
-    const stored = localStorage.getItem('chatrooms');
+    const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+    const projectId = currentProject.id;
+    const stored = localStorage.getItem(`chatrooms_${projectId}`);
     return stored ? JSON.parse(stored) : [
       { id: 'general', name: 'General', color: 'linear-gradient(135deg, #1e3c72, #c9a9dd)', pinned: false, hasUnread: false, lastRead: Date.now() }
     ];
@@ -50,20 +52,23 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
     fetchCurrentUserName();
     
     const interval = setInterval(() => {
-      fetch(`http://localhost:5000/api/chat/messages?chat_id=${activeChatId}`)
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          }
-          throw new Error('API not available');
-        })
-        .then(data => {
-          setMessages(data.reverse());
-          checkForUnreadMessages();
-        })
-        .catch(() => {
-          // Don't update messages if API is down - keep local messages
-        });
+      const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+      if (currentProject.id) {
+        fetch(`http://localhost:5000/api/chat/messages?chat_id=${activeChatId}&project_id=${currentProject.id}`)
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('API not available');
+          })
+          .then(data => {
+            setMessages(data.reverse());
+            checkForUnreadMessages();
+          })
+          .catch(() => {
+            // Don't update messages if API is down - keep local messages
+          });
+      }
     }, 3000);
     return () => clearInterval(interval);
   }, [activeChatId]);
@@ -89,20 +94,24 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
 
   const fetchTopics = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/chat/topics');
+      const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+      if (!currentProject.id) return;
+      
+      const response = await fetch(`http://localhost:5000/api/chat/topics?project_id=${currentProject.id}`);
       if (response.ok) {
         const data = await response.json();
         setChatrooms(data);
       } else {
         // Load from localStorage as fallback
-        const stored = localStorage.getItem('chatrooms');
+        const stored = localStorage.getItem(`chatrooms_${currentProject.id}`);
         if (stored) {
           setChatrooms(JSON.parse(stored));
         }
       }
     } catch (error) {
       // Load from localStorage as fallback
-      const stored = localStorage.getItem('chatrooms');
+      const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+      const stored = localStorage.getItem(`chatrooms_${currentProject.id}`);
       if (stored) {
         setChatrooms(JSON.parse(stored));
       }
@@ -111,18 +120,22 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/chat/messages?chat_id=${activeChatId}`);
+      const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+      if (!currentProject.id) return;
+      
+      const response = await fetch(`http://localhost:5000/api/chat/messages?chat_id=${activeChatId}&project_id=${currentProject.id}`);
       if (response.ok) {
         const data = await response.json();
         setMessages(data.reverse());
       } else {
         // Load from localStorage as fallback
-        const stored = localStorage.getItem(`messages_${activeChatId}`);
+        const stored = localStorage.getItem(`messages_${activeChatId}_${currentProject.id}`);
         setMessages(stored ? JSON.parse(stored) : []);
       }
     } catch (error) {
       // Load from localStorage as fallback
-      const stored = localStorage.getItem(`messages_${activeChatId}`);
+      const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+      const stored = localStorage.getItem(`messages_${activeChatId}_${currentProject.id}`);
       setMessages(stored ? JSON.parse(stored) : []);
     }
   };
@@ -164,6 +177,7 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
         }
       } else {
         // Handle text-only message
+        const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
         const response = await fetch('http://localhost:5000/api/chat/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -172,7 +186,8 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
             username: currentUser.name || currentUserName || 'User',
             content: newMessage,
             reply_to: replyTo,
-            chat_id: activeChatId
+            chat_id: activeChatId,
+            project_id: currentProject.id
           })
         });
         
@@ -235,10 +250,11 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
     };
     
     try {
+      const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
       const response = await fetch('http://localhost:5000/api/chat/topics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTopic)
+        body: JSON.stringify({...newTopic, project_id: currentProject.id})
       });
       
       if (response.ok) {
@@ -246,12 +262,14 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
       } else {
         const updatedRooms = [...chatrooms, newTopic];
         setChatrooms(updatedRooms);
-        localStorage.setItem('chatrooms', JSON.stringify(updatedRooms));
+        const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+        localStorage.setItem(`chatrooms_${currentProject.id}`, JSON.stringify(updatedRooms));
       }
     } catch (error) {
       const updatedRooms = [...chatrooms, newTopic];
       setChatrooms(updatedRooms);
-      localStorage.setItem('chatrooms', JSON.stringify(updatedRooms));
+      const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+      localStorage.setItem(`chatrooms_${currentProject.id}`, JSON.stringify(updatedRooms));
     }
     
     setNewTopicName('');
@@ -263,7 +281,8 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
       room.id === topicId ? { ...room, pinned: !room.pinned } : room
     );
     setChatrooms(updatedRooms);
-    localStorage.setItem('chatrooms', JSON.stringify(updatedRooms));
+    const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+    localStorage.setItem(`chatrooms_${currentProject.id}`, JSON.stringify(updatedRooms));
   };
 
   const getSortedChatrooms = () => {
@@ -311,7 +330,8 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
   const deleteTopic = async (topicId) => {
     try {
       // Delete topic and its messages from backend
-      const response = await fetch(`http://localhost:5000/api/chat/topics/${topicId}`, {
+      const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+      const response = await fetch(`http://localhost:5000/api/chat/topics/${topicId}?project_id=${currentProject.id}`, {
         method: 'DELETE'
       });
       
@@ -376,7 +396,11 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
     return userProfiles[username] || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&size=40&background=8178A1`;
   };
 
-  const activeChat = chatrooms.find(chat => chat.id === activeChatId) || chatrooms[0];
+  const activeChat = chatrooms.find(chat => chat.id === activeChatId) || chatrooms[0] || {
+    id: 'general',
+    name: 'General',
+    color: 'linear-gradient(135deg, #1e3c72, #c9a9dd)'
+  };
 
   const getThreadMessages = (parentId) => {
     return messages.filter(msg => msg.reply_to === parentId);

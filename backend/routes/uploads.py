@@ -22,8 +22,10 @@ def init_upload_db():
         CREATE TABLE IF NOT EXISTS folders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            path TEXT UNIQUE NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            path TEXT NOT NULL,
+            project_id TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(path, project_id)
         )
     ''')
     
@@ -35,6 +37,7 @@ def init_upload_db():
             file_path TEXT NOT NULL,
             folder_path TEXT,
             file_size INTEGER,
+            project_id TEXT NOT NULL,
             uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -45,6 +48,7 @@ def init_upload_db():
             action TEXT NOT NULL,
             item TEXT NOT NULL,
             type TEXT NOT NULL,
+            project_id TEXT NOT NULL,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -53,6 +57,7 @@ def init_upload_db():
         CREATE TABLE IF NOT EXISTS snapshots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             snapshot_data TEXT NOT NULL,
+            project_id TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -73,6 +78,10 @@ def upload_file():
     
     file = request.files['file']
     folder_name = request.form.get('folder', '')
+    project_id = request.form.get('project_id')
+    
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID required'})
     
     if file.filename == '':
         return jsonify({'success': False, 'message': 'No file selected'})
@@ -81,12 +90,15 @@ def upload_file():
         original_filename = file.filename
         filename = str(uuid.uuid4()) + '_' + secure_filename(original_filename)
         
+        # Create project-specific folder structure
+        project_folder = os.path.join(UPLOAD_FOLDER, project_id)
         if folder_name:
-            folder_path = os.path.join(UPLOAD_FOLDER, *folder_name.split('/'))
+            folder_path = os.path.join(project_folder, *folder_name.split('/'))
             os.makedirs(folder_path, exist_ok=True)
             file_path = os.path.join(folder_path, filename)
         else:
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            os.makedirs(project_folder, exist_ok=True)
+            file_path = os.path.join(project_folder, filename)
         
         try:
             file.save(file_path)
@@ -95,23 +107,23 @@ def upload_file():
             conn = sqlite3.connect('uploads.db')
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO uploaded_files (filename, original_filename, file_path, folder_path, file_size)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (filename, original_filename, file_path, folder_name or None, os.path.getsize(file_path)))
+                INSERT INTO uploaded_files (filename, original_filename, file_path, folder_path, file_size, project_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (filename, original_filename, file_path, folder_name or None, os.path.getsize(file_path), project_id))
             
             # Only log to history if requested
             log_history = request.form.get('log_history', 'false').lower() == 'true'
             if log_history:
                 cursor.execute('''
-                    INSERT INTO history (action, item, type)
-                    VALUES (?, ?, ?)
-                ''', ('Added', original_filename, 'File'))
+                    INSERT INTO history (action, item, type, project_id)
+                    VALUES (?, ?, ?, ?)
+                ''', ('Added', original_filename, 'File', project_id))
                 
-                snapshot_data = create_snapshot()
+                snapshot_data = create_snapshot(project_id)
                 cursor.execute('''
-                    INSERT INTO snapshots (snapshot_data)
-                    VALUES (?)
-                ''', (snapshot_data,))
+                    INSERT INTO snapshots (snapshot_data, project_id)
+                    VALUES (?, ?)
+                ''', (snapshot_data, project_id))
             
             conn.commit()
             conn.close()
@@ -128,9 +140,10 @@ def create_folder():
     data = request.json
     folder_name = data.get('folder_name')
     parent_path = data.get('parent_path', '')
+    project_id = data.get('project_id')
     
-    if not folder_name:
-        return jsonify({'success': False, 'message': 'Folder name required'})
+    if not folder_name or not project_id:
+        return jsonify({'success': False, 'message': 'Folder name and project ID required'})
     
     try:
         # Build full path
@@ -139,8 +152,8 @@ def create_folder():
         else:
             full_path = folder_name
         
-        # Create physical folder
-        physical_path = os.path.join(UPLOAD_FOLDER, *full_path.split('/'))
+        # Create physical folder in project directory
+        physical_path = os.path.join(UPLOAD_FOLDER, project_id, *full_path.split('/'))
         
         if os.path.exists(physical_path):
             return jsonify({'success': False, 'message': 'Folder already exists'})
@@ -151,23 +164,23 @@ def create_folder():
         conn = sqlite3.connect('uploads.db')
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT OR IGNORE INTO folders (name, path)
-            VALUES (?, ?)
-        ''', (folder_name, full_path))
+            INSERT OR IGNORE INTO folders (name, path, project_id)
+            VALUES (?, ?, ?)
+        ''', (folder_name, full_path, project_id))
         
         # Only log to history if requested
         log_history = data.get('log_history', False)
         if log_history:
             cursor.execute('''
-                INSERT INTO history (action, item, type)
-                VALUES (?, ?, ?)
-            ''', ('Added', full_path, 'Folder'))
+                INSERT INTO history (action, item, type, project_id)
+                VALUES (?, ?, ?, ?)
+            ''', ('Added', full_path, 'Folder', project_id))
             
-            snapshot_data = create_snapshot()
+            snapshot_data = create_snapshot(project_id)
             cursor.execute('''
-                INSERT INTO snapshots (snapshot_data)
-                VALUES (?)
-            ''', (snapshot_data,))
+                INSERT INTO snapshots (snapshot_data, project_id)
+                VALUES (?, ?)
+            ''', (snapshot_data, project_id))
         
         conn.commit()
         conn.close()
@@ -179,14 +192,22 @@ def create_folder():
 @uploads_bp.route('/api/folder-tree', methods=['GET'])
 @cross_origin()
 def get_folder_tree():
+    project_id = request.args.get('project_id')
+    if not project_id:
+        return jsonify({'success': False, 'folders': []})
+    
     try:
         folders = []
+        project_folder = os.path.join(UPLOAD_FOLDER, project_id)
         
-        # Walk through all directories
-        for root, dirs, files in os.walk(UPLOAD_FOLDER):
+        if not os.path.exists(project_folder):
+            return jsonify({'success': True, 'folders': []})
+        
+        # Walk through project directories only
+        for root, dirs, files in os.walk(project_folder):
             for dir_name in dirs:
                 full_dir_path = os.path.join(root, dir_name)
-                relative_path = os.path.relpath(full_dir_path, UPLOAD_FOLDER)
+                relative_path = os.path.relpath(full_dir_path, project_folder)
                 
                 # Calculate level based on path depth
                 level = len(relative_path.split(os.sep)) - 1 if relative_path != '.' else 0
@@ -208,11 +229,17 @@ def get_folder_tree():
 @uploads_bp.route('/api/folder-contents/<path:folder_path>', methods=['GET'])
 @cross_origin()
 def get_folder_contents(folder_path):
+    project_id = request.args.get('project_id')
+    if not project_id:
+        return jsonify({'success': False, 'items': []})
+    
     try:
+        project_folder = os.path.join(UPLOAD_FOLDER, project_id)
+        
         if folder_path == 'root':
-            target_path = UPLOAD_FOLDER
+            target_path = project_folder
         else:
-            target_path = os.path.join(UPLOAD_FOLDER, folder_path)
+            target_path = os.path.join(project_folder, folder_path)
         
         if not os.path.exists(target_path):
             return jsonify({'success': False, 'items': []})
@@ -249,12 +276,13 @@ def delete_folder():
     
     data = request.json
     folder_path = data.get('folder_path')
+    project_id = data.get('project_id')
     
-    if not folder_path or folder_path == 'root':
-        return jsonify({'success': False, 'message': 'Cannot delete root folder'})
+    if not folder_path or folder_path == 'root' or not project_id:
+        return jsonify({'success': False, 'message': 'Cannot delete root folder or missing project ID'})
     
     try:
-        physical_path = os.path.join(UPLOAD_FOLDER, folder_path)
+        physical_path = os.path.join(UPLOAD_FOLDER, project_id, folder_path)
         
         if not os.path.exists(physical_path):
             return jsonify({'success': False, 'message': 'Folder not found'})
@@ -271,15 +299,15 @@ def delete_folder():
             conn = sqlite3.connect('uploads.db')
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO history (action, item, type)
-                VALUES (?, ?, ?)
-            ''', ('Deleted', folder_path, 'Folder'))
+                INSERT INTO history (action, item, type, project_id)
+                VALUES (?, ?, ?, ?)
+            ''', ('Deleted', folder_path, 'Folder', project_id))
             
-            snapshot_data = create_snapshot()
+            snapshot_data = create_snapshot(project_id)
             cursor.execute('''
-                INSERT INTO snapshots (snapshot_data)
-                VALUES (?)
-            ''', (snapshot_data,))
+                INSERT INTO snapshots (snapshot_data, project_id)
+                VALUES (?, ?)
+            ''', (snapshot_data, project_id))
             
             conn.commit()
             conn.close()
@@ -291,8 +319,12 @@ def delete_folder():
 @uploads_bp.route('/api/file-preview/<path:file_path>', methods=['GET'])
 @cross_origin()
 def preview_file(file_path):
+    project_id = request.args.get('project_id')
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID required'})
+    
     try:
-        physical_path = os.path.join(UPLOAD_FOLDER, file_path)
+        physical_path = os.path.join(UPLOAD_FOLDER, project_id, file_path)
         
         if not os.path.exists(physical_path):
             return jsonify({'success': False, 'message': 'File not found'})
@@ -338,22 +370,26 @@ def preview_file(file_path):
     except Exception as e:
         return jsonify({'success': False, 'message': 'Failed to preview file'})
 
-def create_snapshot():
+def create_snapshot(project_id):
     import json
     import base64
     try:
         snapshot = {'folders': [], 'files': []}
+        project_folder = os.path.join(UPLOAD_FOLDER, project_id)
         
-        # Capture current folder structure and file contents
-        for root, dirs, files in os.walk(UPLOAD_FOLDER):
+        if not os.path.exists(project_folder):
+            return json.dumps(snapshot)
+        
+        # Capture current folder structure and file contents for this project
+        for root, dirs, files in os.walk(project_folder):
             for dir_name in dirs:
                 full_dir_path = os.path.join(root, dir_name)
-                relative_path = os.path.relpath(full_dir_path, UPLOAD_FOLDER)
+                relative_path = os.path.relpath(full_dir_path, project_folder)
                 snapshot['folders'].append(relative_path.replace(os.sep, '/'))
             
             for file_name in files:
                 full_file_path = os.path.join(root, file_name)
-                relative_path = os.path.relpath(full_file_path, UPLOAD_FOLDER)
+                relative_path = os.path.relpath(full_file_path, project_folder)
                 try:
                     with open(full_file_path, 'rb') as f:
                         content = base64.b64encode(f.read()).decode('utf-8')
@@ -371,15 +407,20 @@ def create_snapshot():
 @uploads_bp.route('/api/history', methods=['GET'])
 @cross_origin()
 def get_history():
+    project_id = request.args.get('project_id')
+    if not project_id:
+        return jsonify({'success': False, 'history': []})
+    
     try:
         conn = sqlite3.connect('uploads.db')
         cursor = conn.cursor()
         cursor.execute('''
             SELECT h.id, h.action, h.item, h.type, h.timestamp
             FROM history h
+            WHERE h.project_id = ?
             ORDER BY h.timestamp DESC
             LIMIT 20
-        ''')
+        ''', (project_id,))
         
         history = []
         for row in cursor.fetchall():
@@ -401,21 +442,25 @@ def get_history():
 def create_named_snapshot():
     data = request.json
     snapshot_name = data.get('snapshot_name', 'Unnamed Snapshot')
+    project_id = data.get('project_id')
+    
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID required'})
     
     try:
         conn = sqlite3.connect('uploads.db')
         cursor = conn.cursor()
         
         cursor.execute('''
-            INSERT INTO history (action, item, type)
-            VALUES (?, ?, ?)
-        ''', ('Snapshot', snapshot_name, 'System'))
+            INSERT INTO history (action, item, type, project_id)
+            VALUES (?, ?, ?, ?)
+        ''', ('Snapshot', snapshot_name, 'System', project_id))
         
-        snapshot_data = create_snapshot()
+        snapshot_data = create_snapshot(project_id)
         cursor.execute('''
-            INSERT INTO snapshots (snapshot_data)
-            VALUES (?)
-        ''', (snapshot_data,))
+            INSERT INTO snapshots (snapshot_data, project_id)
+            VALUES (?, ?)
+        ''', (snapshot_data, project_id))
         
         conn.commit()
         conn.close()
@@ -431,33 +476,40 @@ def revert_to_version(history_id):
     import shutil
     import base64
     
+    data = request.json
+    project_id = data.get('project_id')
+    
+    if not project_id:
+        return jsonify({'success': False, 'message': 'Project ID required'})
+    
     try:
         conn = sqlite3.connect('uploads.db')
         cursor = conn.cursor()
         
-        # Get snapshot from this history entry
+        # Get snapshot from this history entry for this project
         cursor.execute('''
             SELECT s.snapshot_data FROM snapshots s
-            JOIN history h ON s.created_at <= h.timestamp
-            WHERE h.id = ?
+            JOIN history h ON s.created_at <= h.timestamp AND s.project_id = h.project_id
+            WHERE h.id = ? AND h.project_id = ?
             ORDER BY s.created_at DESC
             LIMIT 1
-        ''', (history_id,))
+        ''', (history_id, project_id))
         
         result = cursor.fetchone()
         if not result:
             return jsonify({'success': False, 'message': 'No snapshot found'})
         
         snapshot = json.loads(result[0])
+        project_folder = os.path.join(UPLOAD_FOLDER, project_id)
         
-        # Clear current uploads folder
-        if os.path.exists(UPLOAD_FOLDER):
-            shutil.rmtree(UPLOAD_FOLDER)
-        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        # Clear current project folder
+        if os.path.exists(project_folder):
+            shutil.rmtree(project_folder)
+        os.makedirs(project_folder, exist_ok=True)
         
         # Recreate folder structure
         for folder_path in snapshot.get('folders', []):
-            physical_path = os.path.join(UPLOAD_FOLDER, *folder_path.split('/'))
+            physical_path = os.path.join(project_folder, *folder_path.split('/'))
             os.makedirs(physical_path, exist_ok=True)
         
         # Restore files with content
@@ -465,16 +517,16 @@ def revert_to_version(history_id):
             if isinstance(file_info, dict):
                 file_path = file_info['path']
                 content = file_info['content']
-                physical_path = os.path.join(UPLOAD_FOLDER, *file_path.split('/'))
+                physical_path = os.path.join(project_folder, *file_path.split('/'))
                 os.makedirs(os.path.dirname(physical_path), exist_ok=True)
                 with open(physical_path, 'wb') as f:
                     f.write(base64.b64decode(content))
         
         # Add revert action to history
         cursor.execute('''
-            INSERT INTO history (action, item, type)
-            VALUES (?, ?, ?)
-        ''', ('Reverted', f'to version {history_id}', 'System'))
+            INSERT INTO history (action, item, type, project_id)
+            VALUES (?, ?, ?, ?)
+        ''', ('Reverted', f'to version {history_id}', 'System', project_id))
         
         conn.commit()
         conn.close()

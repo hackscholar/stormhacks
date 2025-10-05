@@ -21,20 +21,24 @@ def init_chat_db():
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
         reply_to INTEGER,
         chat_type TEXT DEFAULT 'public',
-        chat_id TEXT DEFAULT 'general'
+        chat_id TEXT DEFAULT 'general',
+        project_id TEXT NOT NULL
     )''')
     
     conn.execute('''CREATE TABLE IF NOT EXISTS chat_topics (
-        id TEXT PRIMARY KEY,
+        id TEXT NOT NULL,
         name TEXT NOT NULL,
         color TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        project_id TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id, project_id)
     )''')
     
     conn.execute('''CREATE TABLE IF NOT EXISTS chat_groups (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         created_by INTEGER NOT NULL,
+        project_id TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )''')
     
@@ -44,21 +48,20 @@ def init_chat_db():
         PRIMARY KEY (group_id, user_id)
     )''')
     
-    # Insert default topics if they don't exist
-    conn.execute('''INSERT OR IGNORE INTO chat_topics (id, name, color) VALUES 
-        ('general', 'General', 'linear-gradient(135deg, #1e3c72, #c9a9dd)'),
-        ('random', 'Random', 'linear-gradient(135deg, #2c5aa0, #b19cd9)')''')
-    
     conn.commit()
     conn.close()
 
 @chat_bp.route('/messages', methods=['GET'])
 def get_messages():
     chat_id = request.args.get('chat_id', 'general')
+    project_id = request.args.get('project_id')
+    if not project_id:
+        return jsonify([])
+    
     conn = get_db()
     messages = conn.execute(
-        'SELECT * FROM messages WHERE chat_id = ? ORDER BY timestamp DESC LIMIT 50',
-        (chat_id,)
+        'SELECT * FROM messages WHERE chat_id = ? AND project_id = ? ORDER BY timestamp DESC LIMIT 50',
+        (chat_id, project_id)
     ).fetchall()
     conn.close()
     return jsonify([dict(msg) for msg in messages])
@@ -66,11 +69,15 @@ def get_messages():
 @chat_bp.route('/messages', methods=['POST'])
 def send_message():
     data = request.get_json()
+    project_id = data.get('project_id')
+    if not project_id:
+        return jsonify({'status': 'error', 'message': 'Project ID required'})
+    
     conn = get_db()
     conn.execute(
-        'INSERT INTO messages (user_id, username, content, reply_to, chat_type, chat_id) VALUES (?, ?, ?, ?, ?, ?)',
+        'INSERT INTO messages (user_id, username, content, reply_to, chat_type, chat_id, project_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
         (data['user_id'], data['username'], data['content'], 
-         data.get('reply_to'), data.get('chat_type', 'public'), data.get('chat_id', 'general'))
+         data.get('reply_to'), data.get('chat_type', 'public'), data.get('chat_id', 'general'), project_id)
     )
     conn.commit()
     conn.close()
@@ -114,18 +121,35 @@ def create_group():
 
 @chat_bp.route('/topics', methods=['GET'])
 def get_topics():
+    project_id = request.args.get('project_id')
+    if not project_id:
+        return jsonify([])
+    
     conn = get_db()
-    topics = conn.execute('SELECT * FROM chat_topics ORDER BY created_at').fetchall()
+    topics = conn.execute('SELECT * FROM chat_topics WHERE project_id = ? ORDER BY created_at', (project_id,)).fetchall()
+    
+    # If no topics exist for this project, create default ones
+    if not topics:
+        conn.execute('''INSERT INTO chat_topics (id, name, color, project_id) VALUES 
+            ('general', 'General', 'linear-gradient(135deg, #1e3c72, #c9a9dd)', ?),
+            ('random', 'Random', 'linear-gradient(135deg, #2c5aa0, #b19cd9)', ?)''', (project_id, project_id))
+        conn.commit()
+        topics = conn.execute('SELECT * FROM chat_topics WHERE project_id = ? ORDER BY created_at', (project_id,)).fetchall()
+    
     conn.close()
     return jsonify([dict(topic) for topic in topics])
 
 @chat_bp.route('/topics', methods=['POST'])
 def create_topic():
     data = request.get_json()
+    project_id = data.get('project_id')
+    if not project_id:
+        return jsonify({'status': 'error', 'message': 'Project ID required'})
+    
     conn = get_db()
     conn.execute(
-        'INSERT INTO chat_topics (id, name, color) VALUES (?, ?, ?)',
-        (data['id'], data['name'], data['color'])
+        'INSERT INTO chat_topics (id, name, color, project_id) VALUES (?, ?, ?, ?)',
+        (data['id'], data['name'], data['color'], project_id)
     )
     conn.commit()
     conn.close()
@@ -133,11 +157,15 @@ def create_topic():
 
 @chat_bp.route('/topics/<topic_id>', methods=['DELETE'])
 def delete_topic(topic_id):
+    project_id = request.args.get('project_id')
+    if not project_id:
+        return jsonify({'status': 'error', 'message': 'Project ID required'})
+    
     conn = get_db()
-    # Delete all messages for this topic
-    conn.execute('DELETE FROM messages WHERE chat_id = ?', (topic_id,))
+    # Delete all messages for this topic in this project
+    conn.execute('DELETE FROM messages WHERE chat_id = ? AND project_id = ?', (topic_id, project_id))
     # Delete the topic itself
-    conn.execute('DELETE FROM chat_topics WHERE id = ?', (topic_id,))
+    conn.execute('DELETE FROM chat_topics WHERE id = ? AND project_id = ?', (topic_id, project_id))
     conn.commit()
     conn.close()
     return jsonify({'status': 'deleted'})

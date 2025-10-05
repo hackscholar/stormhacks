@@ -116,13 +116,19 @@ function Uploads() {
             if (!folderName) return;
             
             try {
+              const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+              if (!currentProject.id) {
+                document.getElementById('upload-status').innerHTML = '<p style="color: red;">No project selected</p>';
+                return;
+              }
               const response = await fetch('http://127.0.0.1:5000/api/create-folder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                   folder_name: folderName,
                   parent_path: parentPath || 'root',
-                  log_history: document.getElementById('log-history-toggle').checked
+                  log_history: document.getElementById('log-history-toggle').checked,
+                  project_id: currentProject.id
                 })
               });
               
@@ -140,7 +146,8 @@ function Uploads() {
           
           window.loadFolders = async () => {
             try {
-              const response = await fetch('http://127.0.0.1:5000/api/folder-tree');
+              const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+              const response = await fetch(`http://127.0.0.1:5000/api/folder-tree?project_id=${currentProject.id}`);
               const result = await response.json();
               
               const folderList = document.getElementById('folder-list');
@@ -181,7 +188,8 @@ function Uploads() {
             if (filesDiv.style.display === 'none') {
               // Load and show contents
               try {
-                const response = await fetch(`http://127.0.0.1:5000/api/folder-contents/${folderPath}`);
+                const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+                const response = await fetch(`http://127.0.0.1:5000/api/folder-contents/${folderPath}?project_id=${currentProject.id}`);
                 const result = await response.json();
                 
                 let content = '';
@@ -250,9 +258,11 @@ function Uploads() {
             const statusDiv = document.getElementById('upload-status');
             
             const formData = new FormData();
+            const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
             formData.append('file', file);
             formData.append('folder', folderName);
             formData.append('log_history', document.getElementById('log-history-toggle').checked);
+            formData.append('project_id', currentProject.id);
             
             try {
               const response = await fetch('http://127.0.0.1:5000/api/upload', {
@@ -275,12 +285,14 @@ function Uploads() {
             if (!confirmed) return;
             
             try {
+              const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
               const response = await fetch('http://127.0.0.1:5000/api/delete-folder', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                   folder_path: folderPath,
-                  log_history: document.getElementById('log-history-toggle').checked
+                  log_history: document.getElementById('log-history-toggle').checked,
+                  project_id: currentProject.id
                 })
               });
               
@@ -298,7 +310,8 @@ function Uploads() {
           
           window.previewFile = async (filePath, fileName) => {
             try {
-              const response = await fetch(`http://127.0.0.1:5000/api/file-preview/${filePath}`);
+              const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+              const response = await fetch(`http://127.0.0.1:5000/api/file-preview/${filePath}?project_id=${currentProject.id}`);
               const result = await response.json();
               
               if (!result.success) {
@@ -372,7 +385,8 @@ function Uploads() {
           
           window.loadHistory = async () => {
             try {
-              const response = await fetch('http://127.0.0.1:5000/api/history');
+              const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
+              const response = await fetch(`http://127.0.0.1:5000/api/history?project_id=${currentProject.id}`);
               const result = await response.json();
               
               const historyDiv = document.getElementById('version-history');
@@ -406,10 +420,14 @@ function Uploads() {
             if (!snapshotName) return;
             
             try {
+              const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
               const response = await fetch('http://127.0.0.1:5000/api/create-snapshot', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ snapshot_name: snapshotName })
+                body: JSON.stringify({ 
+                  snapshot_name: snapshotName,
+                  project_id: currentProject.id
+                })
               });
               
               const result = await response.json();
@@ -430,8 +448,11 @@ function Uploads() {
             if (!confirmed) return;
             
             try {
+              const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
               const response = await fetch(`http://127.0.0.1:5000/api/revert/${historyId}`, {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ project_id: currentProject.id })
               });
               
               const result = await response.json();
