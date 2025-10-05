@@ -65,7 +65,7 @@ function CreateProject() {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/api/create-project', {
+      const response = await fetch('http://127.0.0.1:5000/api/create-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(projectData)
@@ -82,15 +82,7 @@ function CreateProject() {
         projects.push(result.project);
         localStorage.setItem('projects', JSON.stringify(projects));
         
-        // Store collaborator responsibilities locally
-        collaborators.forEach(collab => {
-          if (collab.email) {
-            localStorage.setItem(`responsibilities_${collab.email}`, JSON.stringify({
-              projectId: result.project.id,
-              responsibilities: collab.responsibilities.filter(r => r.trim())
-            }));
-          }
-        });
+        // Data is now stored in database via backend API
       } else {
         setStatus('failed');
       }

@@ -7,21 +7,37 @@ function Signup() {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const userData = {
-      email: email,
-      password: password
-    };
-    
-    localStorage.setItem('user_' + email, JSON.stringify(userData));
-    
-    setMessage('Account created successfully! Redirecting to login...');
-    
-    setTimeout(() => {
-      navigate('/');
-    }, 2000);
+    try {
+      console.log('Attempting to connect to backend...');
+      const response = await fetch('http://127.0.0.1:5000/api/signup', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        body: JSON.stringify({ email, password })
+      });
+      
+      console.log('Response status:', response.status);
+      const result = await response.json();
+      console.log('Response data:', result);
+      
+      if (result.success) {
+        setMessage('Account created successfully! Redirecting to login...');
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      } else {
+        setMessage(result.message || 'Signup failed');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      setMessage('Cannot connect to server. Make sure backend is running.');
+    }
   };
 
   return (

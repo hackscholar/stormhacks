@@ -7,24 +7,29 @@ function Login() {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const storedUser = localStorage.getItem('user_' + email);
-    
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
       
-      if (userData.password === password) {
+      const result = await response.json();
+      
+      if (result.success) {
+        localStorage.setItem('currentUser', email);
         setMessage('Login successful! Redirecting...');
         setTimeout(() => {
           navigate('/dashboard');
         }, 1000);
       } else {
-        setMessage('Invalid password!');
+        setMessage(result.message);
       }
-    } else {
-      setMessage('User not found! Please sign up first.');
+    } catch (error) {
+      setMessage('Error logging in. Please try again.');
     }
   };
 
