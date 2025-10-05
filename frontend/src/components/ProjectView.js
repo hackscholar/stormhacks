@@ -35,17 +35,20 @@ function ProjectView() {
   return (
     <div className="fullscreen-container">
       <h2>{project.name}</h2>
-      <div className="project-info-dropdown">
-        <button 
-          className="project-info-btn"
-          onClick={() => setShowProjectInfo(!showProjectInfo)}
-        >
-          Project Info ▼
-        </button>
-        <div className={`project-info-content ${showProjectInfo ? 'show' : ''}`}>
-          <div><strong>Code:</strong> {project.code}</div>
-          <div><strong>Creator:</strong> {project.creator}</div>
-          <div><strong>Team:</strong> {project.collaborators.length} members</div>
+      <div 
+        className="profile-dropdown"
+        onMouseEnter={() => setShowProjectInfo(true)}
+        onMouseLeave={() => setShowProjectInfo(false)}
+      >
+        <div className="profile-avatar" style={{border: '1px solid black', borderRadius: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+          <span className="user-name" style={{color: 'black'}}>Project Details</span>
+        </div>
+        <div className={`dropdown-content ${showProjectInfo ? 'show' : ''}`} style={{top: '47px', marginTop: '0', minWidth: '200px'}}>
+          <div style={{padding: '0.5rem', color: 'white', fontSize: '12px'}}>
+            <div><strong>Code:</strong> {project.code}</div>
+            <div><strong>Creator:</strong> {project.creator}</div>
+            <div><strong>Team:</strong> {project.collaborators.length} members</div>
+          </div>
         </div>
       </div>
       
@@ -57,25 +60,29 @@ function ProjectView() {
             className={`tab-button ${activeTab === 'timeline' ? 'active' : ''}`}
             onClick={() => setActiveTab('timeline')}
           >
-            📅 Timeline
+            <img src="/icons/timeline-icon.svg" alt="Timeline" style={{width: '20px', height: '20px', marginRight: '8px'}} />
+            Timeline
           </button>
           <button 
             className={`tab-button ${activeTab === 'chatroom' ? 'active' : ''}`}
             onClick={() => setActiveTab('chatroom')}
           >
-            💬 Chatroom
+            <img src="/icons/chat-icon.svg" alt="Chat" style={{width: '20px', height: '20px', marginRight: '8px'}} />
+            Chatroom
           </button>
           <button 
             className={`tab-button ${activeTab === 'files' ? 'active' : ''}`}
             onClick={() => setActiveTab('files')}
           >
-            📁 File Specs
+            <img src="/icons/file-icon.svg" alt="Files" style={{width: '20px', height: '20px', marginRight: '8px'}} />
+            File Specs
           </button>
           <button 
             className={`tab-button ${activeTab === 'team' ? 'active' : ''}`}
             onClick={() => setActiveTab('team')}
           >
-            👥 Team
+            <img src="/icons/team-icon.svg" alt="Team" style={{width: '20px', height: '20px', marginRight: '8px'}} />
+            Team
           </button>
         </div>
         
