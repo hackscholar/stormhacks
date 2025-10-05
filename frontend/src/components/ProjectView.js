@@ -43,7 +43,7 @@ function ProjectView() {
         <div className="profile-avatar" style={{border: '1px solid black', borderRadius: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
           <span className="user-name" style={{color: 'black'}}>Project Details</span>
         </div>
-        <div className={`dropdown-content ${showProjectInfo ? 'show' : ''}`} style={{top: '47px', marginTop: '0', minWidth: '200px'}}>
+        <div className={`dropdown-content ${showProjectInfo ? 'show' : ''}`} style={{top: '0', marginTop: '0', minWidth: '200px', right: '0', left: 'auto'}}>
           <div style={{padding: '0.5rem', color: 'white', fontSize: '12px'}}>
             <div><strong>Code:</strong> {project.code}</div>
             <div><strong>Creator:</strong> {project.creator}</div>
