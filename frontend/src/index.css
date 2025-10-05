@@ -561,21 +561,7 @@ p {
   color: white;
   font-family: 'Archivo';
   font-style: italic;
-  font-size: 18px;
-  font-weight: 400;
-}
-
-.project-details {
-  margin: 1rem 0;
-  padding: 1.5rem;
-  background: rgba(255, 250, 250, 0.9);
-  border-radius: 20px;
-  border: 1px .project-details {
-  border: 1px solid rgba(71, 15, 89, 0.2);
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-}
-
-.project-details h3 {
+  font.project-details h3 {
   color: #470F59;
   font-family: 'Archivo';
   font-weight: 700;
@@ -1112,4 +1098,4 @@ p {
   padding: 1rem 0;
   overflow-y: auto;
 }
-
+}
