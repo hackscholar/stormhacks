@@ -9,6 +9,10 @@ from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 
+# Import and register blueprints
+from routes.email import email_bp
+app.register_blueprint(email_bp, url_prefix='/api/email')
+
 # CORS setup
 from flask_cors import CORS, cross_origin
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -172,6 +176,20 @@ def home():
 def test():
     return jsonify({'message': 'Backend is running'})
 
+@app.route('/test-email/<email>', methods=['GET'])
+@cross_origin()
+def test_email(email):
+    try:
+        from routes.email import send_email
+        print(f'Testing email to: {email}')
+        print(f'Using credentials: synchronusdevteam@gmail.com')
+        success = send_email(email, 'Test Email', 'This is a test email from Synchronus!')
+        print(f'Email result: {success}')
+        return jsonify({'success': success, 'message': f'Test email sent to {email}'})
+    except Exception as e:
+        print(f'Test email exception: {e}')
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/api/check-user/<email>', methods=['GET'])
 @cross_origin()
 def check_user(email):
@@ -312,16 +330,33 @@ def send_invitations():
         
         for collab in collaborators:
             email = collab.get('email')
-            responsibilities = ', '.join(collab.get('responsibilities', []))
+            responsibilities = collab.get('responsibilities', [])
             
             if email and responsibilities:
-                success = send_invitation_email(
-                    email, 
-                    project_name, 
-                    responsibilities, 
-                    project_code, 
-                    creator_email
-                )
+                # Use the new email system
+                from routes.email import send_email
+                
+                responsibilities_text = '\n'.join([f'• {resp}' for resp in responsibilities])
+                subject = f'Project Invitation: {project_name}'
+                body = f"""
+Hello!
+
+You have been invited to join the project "{project_name}".
+
+Your responsibilities:
+{responsibilities_text}
+
+Project Code: {project_code}
+Invited by: {creator_email}
+
+To join the project, use the code above in the Synchronus application.
+
+Best regards,
+Synchronus Team
+                """
+                
+                success = send_email(email, subject, body)
+                print(f'Email attempt to {email}: {"Success" if success else "Failed"}')
                 
                 if success:
                     sent_count += 1
