@@ -28,7 +28,7 @@ def init_upload_db():
             UNIQUE(path, project_id)
         )
     ''')
-    
+     
     # Add project_id column if it doesn't exist (migration)
     try:
         cursor.execute('ALTER TABLE folders ADD COLUMN project_id TEXT')
