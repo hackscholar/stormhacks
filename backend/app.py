@@ -50,6 +50,24 @@ class Responsibility(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     collaborator_id = db.Column(db.Integer, db.ForeignKey('collaborator.id'), nullable=False)
     description = db.Column(db.String(500), nullable=False)
+
+class Milestone(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.String(50), db.ForeignKey('project.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    start_date = db.Column(db.String(20), nullable=False)
+    end_date = db.Column(db.String(20), nullable=False)
+    assigned_members = db.Column(db.Text, nullable=False)
+    progress = db.Column(db.Float, default=0.0)
+
+class Task(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    milestone_id = db.Column(db.Integer, db.ForeignKey('milestone.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    due_date = db.Column(db.String(20), nullable=False)
+    assignee = db.Column(db.String(120), nullable=False)
+    responsibility = db.Column(db.String(200), nullable=False)
+    status = db.Column(db.String(20), default='To Do')
 @app.route('/api/create-project', methods=['POST'])
 @cross_origin()
 def create_project():
@@ -109,7 +127,7 @@ def signup():
         if User.query.filter_by(email=email).first():
             return jsonify({'success': False, 'message': 'User already exists'})
         
-        new_user = User(email=email, password=generate_password_hash(password))
+        new_user = User(email=email, password=generate_password_hash(password, method='pbkdf2:sha256'))
         db.session.add(new_user)
         db.session.commit()
         
@@ -373,6 +391,82 @@ Synchronus Team
     except Exception as e:
         print(f'Send invitations error: {e}')
         return jsonify({'success': False, 'message': 'Failed to send invitations'})
+
+@app.route('/api/project/<project_id>/milestones', methods=['GET'])
+@cross_origin()
+def get_milestones(project_id):
+    milestones = Milestone.query.filter_by(project_id=project_id).all()
+    result = []
+    for milestone in milestones:
+        tasks = Task.query.filter_by(milestone_id=milestone.id).all()
+        result.append({
+            'id': milestone.id,
+            'title': milestone.title,
+            'startDate': milestone.start_date,
+            'endDate': milestone.end_date,
+            'assignedMembers': milestone.assigned_members.split(',') if milestone.assigned_members else [],
+            'progress': milestone.progress,
+            'tasks': [{
+                'id': task.id,
+                'title': task.title,
+                'dueDate': task.due_date,
+                'assignee': task.assignee,
+                'responsibility': task.responsibility,
+                'status': task.status
+            } for task in tasks]
+        })
+    return jsonify({'milestones': result})
+
+@app.route('/api/project/<project_id>/milestones', methods=['POST'])
+@cross_origin()
+def add_milestone(project_id):
+    data = request.json
+    milestone = Milestone(
+        project_id=project_id,
+        title=data['title'],
+        start_date=data['startDate'],
+        end_date=data['endDate'],
+        assigned_members=','.join(data['assignedMembers']) if isinstance(data['assignedMembers'], list) else data['assignedMembers']
+    )
+    db.session.add(milestone)
+    db.session.commit()
+    return jsonify({'success': True, 'milestone_id': milestone.id})
+
+@app.route('/api/milestone/<milestone_id>/tasks', methods=['POST'])
+@cross_origin()
+def add_task(milestone_id):
+    data = request.json
+    task = Task(
+        milestone_id=milestone_id,
+        title=data['title'],
+        due_date=data['dueDate'],
+        assignee=data['assignee'],
+        responsibility=data['responsibility'],
+        status=data.get('status', 'To Do')
+    )
+    db.session.add(task)
+    db.session.commit()
+    return jsonify({'success': True, 'task_id': task.id})
+
+@app.route('/api/task/<task_id>/status', methods=['PUT'])
+@cross_origin()
+def update_task_status(task_id):
+    data = request.json
+    task = Task.query.get(task_id)
+    if task:
+        task.status = data['status']
+        db.session.commit()
+        
+        # Update milestone progress
+        milestone = Milestone.query.get(task.milestone_id)
+        if milestone:
+            tasks = Task.query.filter_by(milestone_id=milestone.id).all()
+            completed = len([t for t in tasks if t.status == 'Done'])
+            milestone.progress = (completed / len(tasks)) * 100 if tasks else 0
+            db.session.commit()
+        
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'message': 'Task not found'})
 
 # Register blueprints
 from routes.uploads import uploads_bp

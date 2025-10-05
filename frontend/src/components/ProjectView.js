@@ -17,6 +17,7 @@ function ProjectView() {
       const result = await response.json();
       if (result.success) {
         setProject(result.project);
+        localStorage.setItem('currentProject', JSON.stringify(result.project));
       }
     } catch (error) {
       console.error('Error fetching project:', error);
@@ -57,6 +58,15 @@ function ProjectView() {
           className="chatroom-button"
         >
           Open Chatroom
+        </button>
+      </div>
+
+      <div className="project-actions">
+        <button 
+          onClick={() => navigate(`/project/${projectId}/timeline`)} 
+          className="timeline-button"
+        >
+          📅 Open Timeline
         </button>
       </div>
 
