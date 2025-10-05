@@ -116,6 +116,18 @@ function CreateProject() {
 
   return (
     <div>
+      <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 1000 }}>
+        <button onClick={() => navigate('/dashboard')} style={{
+          background: '#470F59',
+          color: 'white',
+          border: 'none',
+          padding: '10px 20px',
+          borderRadius: '20px',
+          cursor: 'pointer',
+          fontFamily: 'Archivo',
+          fontWeight: '700'
+        }}>← Back to Dashboard</button>
+      </div>
       <div className="container">
         <h2>Create Project</h2>
         
@@ -212,19 +224,6 @@ function CreateProject() {
             <button type="submit">Create Project</button>
           </form>
         )}
-      </div>
-      
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <button onClick={() => navigate('/dashboard')} style={{
-          background: '#470F59',
-          color: 'white',
-          border: 'none',
-          padding: '10px 20px',
-          borderRadius: '20px',
-          cursor: 'pointer',
-          fontFamily: 'Archivo',
-          fontWeight: '700'
-        }}>Back to Dashboard</button>
       </div>
     </div>
   );
