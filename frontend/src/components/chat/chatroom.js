@@ -25,6 +25,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
   const [hoveredTopic, setHoveredTopic] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [topicToDelete, setTopicToDelete] = useState(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   const getRandomGradient = () => {
     const gradients = [
@@ -367,19 +368,37 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
     }}>
       {/* Sidebar */}
       <div style={{
-        width: '300px',
+        width: sidebarCollapsed ? '60px' : '300px',
         background: 'rgba(255, 250, 250, 0.55)',
         borderRadius: '0 45px 0 0',
-        padding: '30px 20px',
-        boxShadow: '4px 0 4px rgba(0,0,0,0.1)'
+        padding: sidebarCollapsed ? '30px 10px' : '30px 20px',
+        boxShadow: '4px 0 4px rgba(0,0,0,0.1)',
+        transition: 'all 0.3s ease',
+        overflow: 'hidden'
       }}>
-        <h2 style={{
-          color: '#470F59',
-          fontSize: '28px',
-          fontWeight: '700',
-          marginBottom: '30px',
-          textAlign: 'center'
-        }}>Topics</h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '30px' }}>
+          {!sidebarCollapsed && (
+            <h2 style={{
+              color: '#470F59',
+              fontSize: '28px',
+              fontWeight: '700',
+              margin: 0
+            }}>Topics</h2>
+          )}
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#470F59',
+              fontSize: '20px',
+              cursor: 'pointer',
+              padding: '5px'
+            }}
+          >
+            {sidebarCollapsed ? '→' : '←'}
+          </button>
+        </div>
         
         {getSortedChatrooms().map(room => (
           <div
@@ -417,7 +436,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
               )}
-              {room.name}
+              {!sidebarCollapsed && room.name}
             </div>
             {(hoveredTopic === room.id || room.pinned) && (
               <button
@@ -459,7 +478,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
             marginTop: '20px'
           }}
         >
-          + New Topic
+          {sidebarCollapsed ? '+' : '+ New Topic'}
         </button>
       </div>
 
