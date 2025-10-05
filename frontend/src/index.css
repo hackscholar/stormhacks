@@ -435,6 +435,7 @@ p {
 .projects-modal {
   max-width: 900px;
   height: 600px;
+  animation: slideUp 1s ease-out;
 }
 
 .modal-buttons {
@@ -448,50 +449,67 @@ p {
   height: 500px;
   gap: 1rem;
   margin: 1rem 0;
+  background: rgba(255, 250, 250, 0.55);
+  border-radius: 45px;
+  box-shadow: 4px 4px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
 }
 
 .projects-list {
   width: 300px;
-  border-right: 1px solid #ddd;
-  padding-right: 1rem;
+  border-right: 1px solid rgba(71, 15, 89, 0.2);
+  padding: 1rem;
   overflow-y: auto;
+  background: transparent;
 }
 
 .project-list-item {
-  border: 1px solid #ddd;
+  border: 1px solid rgba(71, 15, 89, 0.2);
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: 20px;
   margin-bottom: 0.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  background: white;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
 
 .project-list-item:hover {
-  border-color: #007bff;
-  background: #f8f9fa;
+  border-color: #470F59;
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.15);
 }
 
 .project-list-item.selected {
-  border-color: #007bff;
-  background: #e3f2fd;
+  border-color: #470F59;
+  background: white;
+  border-width: 2px;
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.2);
 }
 
 .project-list-item h4 {
   margin: 0 0 0.5rem 0;
-  font-size: 1rem;
+  font-size: 18px;
+  color: #470F59;
+  font-family: 'Archivo';
+  font-weight: 700;
 }
 
 .project-list-item p {
   margin: 0;
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 14px;
+  color: #7C7171;
   text-align: left;
+  font-family: 'Archivo';
+  font-weight: 400;
 }
 
 .project-preview {
   flex: 1;
-  padding-left: 1rem;
+  padding: 1rem;
   overflow-y: auto;
+  background: transparent;
 }
 
 .no-selection {
@@ -499,7 +517,11 @@ p {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #666;
+  color: #7C7171;
+  font-family: 'Archivo';
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 400;
 }
 
 .collaborators-preview {
@@ -509,28 +531,118 @@ p {
 .collab-preview {
   margin-bottom: 1rem;
   padding: 0.5rem;
-  background: #f8f9fa;
-  border-radius: 4px;
+  background: rgba(255, 250, 250, 0.8);
+  border-radius: 15px;
+  border: 1px solid rgba(71, 15, 89, 0.1);
+}
+
+
+
+.open-project-btn {
+  background: #470F59;
+  margin-top: 1rem;
+  border-radius: 25px;
+  font-family: 'Archivo';
+  font-weight: 700;
+  font-size: 18px;
+  padding: 12px 25px;
+  transition: all 0.3s ease;
+}
+
+.open-project-btn:hover {
+  background: #5a1a6b;
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.2);
+}
+
+.no-projects {
+  text-align: center;
+  margin-top: 2rem;
+  color: white;
+  font-family: 'Archivo';
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.project-details {
+  margin: 1rem 0;
+  padding: 1.5rem;
+  background: rgba(255, 250, 250, 0.9);
+  border-radius: 20px;
+  border: 1px solid rgba(71, 15, 89, 0.2);
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.project-details h3 {
+  color: #470F59;
+  font-family: 'Archivo';
+  font-weight: 700;
+  font-size: 24px;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.project-detail-item {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 15px;
+  border: 1px solid rgba(71, 15, 89, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.project-detail-label {
+  color: #470F59;
+  font-family: 'Archivo';
+  font-weight: 700;
+  font-size: 16px;
+  min-width: 100px;
+}
+
+.project-detail-value {
+  color: #7C7171;
+  font-family: 'Archivo';
+  font-weight: 400;
+  font-size: 16px;
+  flex: 1;
+}
+
+.collaborators-preview h4 {
+  color: #470F59;
+  font-family: 'Archivo';
+  font-weight: 700;
+  font-size: 18px;
+  margin: 1.5rem 0 1rem 0;
+}
+
+.collab-preview h5 {
+  color: #470F59;
+  font-family: 'Archivo';
+  font-weight: 700;
+  font-size: 16px;
+  margin: 0 0 0.5rem 0;
 }
 
 .collab-preview ul {
   margin: 0.5rem 0 0 0;
   padding-left: 1.5rem;
-}
-
-.open-project-btn {
-  background: #28a745;
-  margin-top: 1rem;
-}
-
-.open-project-btn:hover {
-  background: #218838;
+  color: #7C7171;
+  font-family: 'Archivo';
+  font-weight: 400;
+  font-size: 14px;
+}hover {
+  background: #5a1a6b;
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.2);
 }
 
 .projects-page {
   width: 100vw;
   height: 100vh;
-  background: white;
+  background: #8178A1;
   padding: 2rem;
   box-sizing: border-box;
   overflow: hidden;
@@ -539,6 +651,11 @@ p {
 .no-projects {
   text-align: center;
   margin-top: 2rem;
+  color: white;
+  font-family: 'Archivo';
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 400;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Archivo+Black:wght@400&family=Archivo:ital,wght@0,400;0,700;1,400;1,700&family=Arimo:ital,wght@0,400;0,700;1,400;1,700&display=swap');
