@@ -39,6 +39,24 @@ def init_upload_db():
         )
     ''')
     
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            action TEXT NOT NULL,
+            item TEXT NOT NULL,
+            type TEXT NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            snapshot_data TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     conn.commit()
     conn.close()
 
@@ -80,6 +98,21 @@ def upload_file():
                 INSERT INTO uploaded_files (filename, original_filename, file_path, folder_path, file_size)
                 VALUES (?, ?, ?, ?, ?)
             ''', (filename, original_filename, file_path, folder_name or None, os.path.getsize(file_path)))
+            
+            # Only log to history if requested
+            log_history = request.form.get('log_history', 'false').lower() == 'true'
+            if log_history:
+                cursor.execute('''
+                    INSERT INTO history (action, item, type)
+                    VALUES (?, ?, ?)
+                ''', ('Added', original_filename, 'File'))
+                
+                snapshot_data = create_snapshot()
+                cursor.execute('''
+                    INSERT INTO snapshots (snapshot_data)
+                    VALUES (?)
+                ''', (snapshot_data,))
+            
             conn.commit()
             conn.close()
             
@@ -121,6 +154,21 @@ def create_folder():
             INSERT OR IGNORE INTO folders (name, path)
             VALUES (?, ?)
         ''', (folder_name, full_path))
+        
+        # Only log to history if requested
+        log_history = data.get('log_history', False)
+        if log_history:
+            cursor.execute('''
+                INSERT INTO history (action, item, type)
+                VALUES (?, ?, ?)
+            ''', ('Added', full_path, 'Folder'))
+            
+            snapshot_data = create_snapshot()
+            cursor.execute('''
+                INSERT INTO snapshots (snapshot_data)
+                VALUES (?)
+            ''', (snapshot_data,))
+        
         conn.commit()
         conn.close()
         
@@ -217,6 +265,25 @@ def delete_folder():
         # Delete the folder and all its contents
         shutil.rmtree(physical_path)
         
+        # Only log to history if requested
+        log_history = data.get('log_history', False)
+        if log_history:
+            conn = sqlite3.connect('uploads.db')
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO history (action, item, type)
+                VALUES (?, ?, ?)
+            ''', ('Deleted', folder_path, 'Folder'))
+            
+            snapshot_data = create_snapshot()
+            cursor.execute('''
+                INSERT INTO snapshots (snapshot_data)
+                VALUES (?)
+            ''', (snapshot_data,))
+            
+            conn.commit()
+            conn.close()
+        
         return jsonify({'success': True, 'message': 'Folder deleted successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': 'Failed to delete folder'})
@@ -270,6 +337,151 @@ def preview_file(file_path):
             
     except Exception as e:
         return jsonify({'success': False, 'message': 'Failed to preview file'})
+
+def create_snapshot():
+    import json
+    import base64
+    try:
+        snapshot = {'folders': [], 'files': []}
+        
+        # Capture current folder structure and file contents
+        for root, dirs, files in os.walk(UPLOAD_FOLDER):
+            for dir_name in dirs:
+                full_dir_path = os.path.join(root, dir_name)
+                relative_path = os.path.relpath(full_dir_path, UPLOAD_FOLDER)
+                snapshot['folders'].append(relative_path.replace(os.sep, '/'))
+            
+            for file_name in files:
+                full_file_path = os.path.join(root, file_name)
+                relative_path = os.path.relpath(full_file_path, UPLOAD_FOLDER)
+                try:
+                    with open(full_file_path, 'rb') as f:
+                        content = base64.b64encode(f.read()).decode('utf-8')
+                    snapshot['files'].append({
+                        'path': relative_path.replace(os.sep, '/'),
+                        'content': content
+                    })
+                except:
+                    pass
+        
+        return json.dumps(snapshot)
+    except:
+        return '{}'
+
+@uploads_bp.route('/api/history', methods=['GET'])
+@cross_origin()
+def get_history():
+    try:
+        conn = sqlite3.connect('uploads.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT h.id, h.action, h.item, h.type, h.timestamp
+            FROM history h
+            ORDER BY h.timestamp DESC
+            LIMIT 20
+        ''')
+        
+        history = []
+        for row in cursor.fetchall():
+            history.append({
+                'id': row[0],
+                'action': row[1],
+                'item': row[2],
+                'type': row[3],
+                'timestamp': row[4]
+            })
+        
+        conn.close()
+        return jsonify({'success': True, 'history': history})
+    except Exception as e:
+        return jsonify({'success': False, 'history': []})
+
+@uploads_bp.route('/api/create-snapshot', methods=['POST'])
+@cross_origin()
+def create_named_snapshot():
+    data = request.json
+    snapshot_name = data.get('snapshot_name', 'Unnamed Snapshot')
+    
+    try:
+        conn = sqlite3.connect('uploads.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO history (action, item, type)
+            VALUES (?, ?, ?)
+        ''', ('Snapshot', snapshot_name, 'System'))
+        
+        snapshot_data = create_snapshot()
+        cursor.execute('''
+            INSERT INTO snapshots (snapshot_data)
+            VALUES (?)
+        ''', (snapshot_data,))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Snapshot created successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Failed to create snapshot'})
+
+@uploads_bp.route('/api/revert/<int:history_id>', methods=['POST'])
+@cross_origin()
+def revert_to_version(history_id):
+    import json
+    import shutil
+    import base64
+    
+    try:
+        conn = sqlite3.connect('uploads.db')
+        cursor = conn.cursor()
+        
+        # Get snapshot from this history entry
+        cursor.execute('''
+            SELECT s.snapshot_data FROM snapshots s
+            JOIN history h ON s.created_at <= h.timestamp
+            WHERE h.id = ?
+            ORDER BY s.created_at DESC
+            LIMIT 1
+        ''', (history_id,))
+        
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({'success': False, 'message': 'No snapshot found'})
+        
+        snapshot = json.loads(result[0])
+        
+        # Clear current uploads folder
+        if os.path.exists(UPLOAD_FOLDER):
+            shutil.rmtree(UPLOAD_FOLDER)
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        
+        # Recreate folder structure
+        for folder_path in snapshot.get('folders', []):
+            physical_path = os.path.join(UPLOAD_FOLDER, *folder_path.split('/'))
+            os.makedirs(physical_path, exist_ok=True)
+        
+        # Restore files with content
+        for file_info in snapshot.get('files', []):
+            if isinstance(file_info, dict):
+                file_path = file_info['path']
+                content = file_info['content']
+                physical_path = os.path.join(UPLOAD_FOLDER, *file_path.split('/'))
+                os.makedirs(os.path.dirname(physical_path), exist_ok=True)
+                with open(physical_path, 'wb') as f:
+                    f.write(base64.b64decode(content))
+        
+        # Add revert action to history
+        cursor.execute('''
+            INSERT INTO history (action, item, type)
+            VALUES (?, ?, ?)
+        ''', ('Reverted', f'to version {history_id}', 'System'))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'File structure restored successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Failed to revert'})
 
 # Function to register routes with main app
 def register_upload_routes(app):

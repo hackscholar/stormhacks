@@ -37,15 +37,32 @@ function Uploads() {
           const uploadDiv = document.createElement('div');
           uploadDiv.className = 'upload-component';
           uploadDiv.innerHTML = `
-            <button onclick="window.quickUpload()" style="margin: 10px 5px 10px 0; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
-              Upload File
-            </button>
-            <button onclick="window.createFolder()" style="margin: 10px 0; padding: 8px 16px; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer;">
-              Create Folder
-            </button>
-            <input type="file" id="hidden-file-input" accept=".txt,.pdf,.doc,.docx,.jpg,.png,.gif" style="display: none;" />
-            <div id="upload-status" style="margin-top: 10px;"></div>
-            <div id="folder-list" style="margin-top: 15px;"></div>
+            <div style="display: flex; gap: 20px;">
+              <div style="flex: 0 0 200px;">
+                <button onclick="window.quickUpload()" style="margin: 10px 5px 10px 0; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
+                  Upload File
+                </button>
+                <button onclick="window.createFolder()" style="margin: 10px 0; padding: 8px 16px; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
+                  Create Folder
+                </button>
+                <label style="display: flex; align-items: center; margin: 10px 0; font-size: 12px;">
+                  <input type="checkbox" id="log-history-toggle" style="margin-right: 5px;">
+                  Log to version history
+                </label>
+                <button onclick="window.saveSnapshot()" style="margin: 10px 0; padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
+                  Save Snapshot
+                </button>
+                <input type="file" id="hidden-file-input" accept=".txt,.pdf,.doc,.docx,.jpg,.png,.gif" style="display: none;" />
+                <div id="upload-status" style="margin-top: 10px;"></div>
+                <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 15px;">
+                  <h5 style="margin: 0 0 10px 0; font-size: 14px;">Version History</h5>
+                  <div id="version-history" style="max-height: 200px; overflow-y: scroll; font-size: 12px; scrollbar-gutter: stable; -webkit-overflow-scrolling: touch;"></div>
+                </div>
+              </div>
+              <div style="flex: 1; min-height: 300px; border-left: 1px solid #ddd; padding-left: 20px;">
+                <div id="folder-list"></div>
+              </div>
+            </div>
           `;
           workspace.appendChild(uploadDiv);
           
@@ -107,7 +124,8 @@ function Uploads() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                   folder_name: folderName,
-                  parent_path: parentPath || 'root'
+                  parent_path: parentPath || 'root',
+                  log_history: document.getElementById('log-history-toggle').checked
                 })
               });
               
@@ -152,23 +170,7 @@ function Uploads() {
                 <div id="root-files" style="display: none; margin-left: 50px; padding: 5px;"></div>
               `;
               
-              // Only show top-level folders (level 0)
-              const topLevelFolders = window.allFolders.filter(folder => folder.level === 0);
-              
-              if (topLevelFolders.length > 0) {
-                topLevelFolders.forEach(folder => {
-                  folderList.innerHTML += `
-                    <div style="margin: 5px 0; padding: 5px; background: #f8f9fa; border-radius: 3px;">
-                      <span style="cursor: pointer;" onclick="window.toggleFolder('${folder.path}')">
-                        folder/${folder.name} <span id="${folder.path.replace(/\//g, '-')}-toggle">▶</span>
-                      </span>
-                      <button onclick="window.createFolder('${folder.path}')" style="margin-left: 10px; padding: 2px 6px; font-size: 11px; background: #28a745; color: white; border: none; border-radius: 2px; cursor: pointer;">+ Subfolder</button>
-                      <button onclick="window.deleteFolder('${folder.path}', '${folder.name}')" style="margin-left: 5px; padding: 2px 6px; font-size: 11px; background: #dc3545; color: white; border: none; border-radius: 2px; cursor: pointer;">Delete</button>
-                    </div>
-                    <div id="${folder.path.replace(/\//g, '-')}-files" style="display: none; margin-left: 50px; padding: 5px;"></div>
-                  `;
-                });
-              }
+              // Don't show any folders at top level - they will appear when root is expanded
             } catch (error) {
               console.error('Failed to load folders');
             }
@@ -253,6 +255,7 @@ function Uploads() {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('folder', folderName);
+            formData.append('log_history', document.getElementById('log-history-toggle').checked);
             
             try {
               const response = await fetch('http://127.0.0.1:5000/api/upload', {
@@ -278,7 +281,10 @@ function Uploads() {
               const response = await fetch('http://127.0.0.1:5000/api/delete-folder', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ folder_path: folderPath })
+                body: JSON.stringify({ 
+                  folder_path: folderPath,
+                  log_history: document.getElementById('log-history-toggle').checked
+                })
               });
               
               const result = await response.json();
@@ -344,8 +350,109 @@ function Uploads() {
             }
           };
           
-          // Load folders immediately
+          window.addToHistory = (action, item, type) => {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const dateStr = now.toLocaleDateString();
+            
+            const historyDiv = document.getElementById('version-history');
+            const entry = document.createElement('div');
+            entry.style.cssText = 'margin: 3px 0; padding: 4px; background: #f8f9fa; border-radius: 2px; border-left: 3px solid ' + (action === 'Added' ? '#28a745' : '#dc3545') + ';';
+            
+            entry.innerHTML = `
+              <div style="font-weight: bold; color: ${action === 'Added' ? '#28a745' : '#dc3545'};">${action} ${type}</div>
+              <div>${item}</div>
+              <div style="color: #666; font-size: 10px;">${dateStr} ${timeStr}</div>
+            `;
+            
+            historyDiv.insertBefore(entry, historyDiv.firstChild);
+            
+            // Keep only last 20 entries
+            while (historyDiv.children.length > 20) {
+              historyDiv.removeChild(historyDiv.lastChild);
+            }
+          };
+          
+          window.loadHistory = async () => {
+            try {
+              const response = await fetch('http://127.0.0.1:5000/api/history');
+              const result = await response.json();
+              
+              const historyDiv = document.getElementById('version-history');
+              historyDiv.innerHTML = '';
+              
+              if (result.history && result.history.length > 0) {
+                result.history.forEach(entry => {
+                  const entryDiv = document.createElement('div');
+                  const color = entry.action === 'Added' ? '#28a745' : entry.action === 'Snapshot' ? '#17a2b8' : '#dc3545';
+                  entryDiv.style.cssText = 'margin: 3px 0; padding: 4px; background: #f8f9fa; border-radius: 2px; border-left: 3px solid ' + color + ';';
+                  
+                  entryDiv.innerHTML = `
+                    <div style="font-weight: bold; color: ${color};">${entry.action} ${entry.type}</div>
+                    <div>${entry.item}</div>
+                    <div style="color: #666; font-size: 10px;">${entry.timestamp}</div>
+                    <button onclick="window.revertToVersion(${entry.id})" style="margin-top: 3px; padding: 2px 6px; font-size: 10px; background: #ffc107; color: black; border: none; border-radius: 2px; cursor: pointer;">Revert</button>
+                  `;
+                  
+                  historyDiv.appendChild(entryDiv);
+                });
+              } else {
+                historyDiv.innerHTML = '<div style="color: #666; font-style: italic;">No history yet</div>';
+              }
+            } catch (error) {
+              console.error('Failed to load history');
+            }
+          };
+          
+          window.saveSnapshot = async () => {
+            const snapshotName = prompt('Enter a name for this snapshot:');
+            if (!snapshotName) return;
+            
+            try {
+              const response = await fetch('http://127.0.0.1:5000/api/create-snapshot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ snapshot_name: snapshotName })
+              });
+              
+              const result = await response.json();
+              if (result.success) {
+                document.getElementById('upload-status').innerHTML = '<p style="color: green;">Snapshot saved!</p>';
+                await window.loadHistory();
+              } else {
+                document.getElementById('upload-status').innerHTML = `<p style="color: red;">${result.message}</p>`;
+              }
+            } catch (error) {
+              document.getElementById('upload-status').innerHTML = '<p style="color: red;">Failed to save snapshot</p>';
+            }
+          };
+          
+          window.revertToVersion = async (historyId) => {
+            const confirmed = confirm('Are you sure you want to revert to this version? This will restore the entire file structure from that point in time.');
+            
+            if (!confirmed) return;
+            
+            try {
+              const response = await fetch(`http://127.0.0.1:5000/api/revert/${historyId}`, {
+                method: 'POST'
+              });
+              
+              const result = await response.json();
+              if (result.success) {
+                document.getElementById('upload-status').innerHTML = '<p style="color: green;">Successfully reverted to previous version!</p>';
+                await window.loadFolders();
+                await window.loadHistory();
+              } else {
+                document.getElementById('upload-status').innerHTML = `<p style="color: red;">${result.message}</p>`;
+              }
+            } catch (error) {
+              document.getElementById('upload-status').innerHTML = '<p style="color: red;">Failed to revert</p>';
+            }
+          };
+          
+          // Load folders and history immediately
           window.loadFolders();
+          window.loadHistory();
         }
       }
     };
