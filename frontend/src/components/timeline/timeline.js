@@ -12,6 +12,7 @@ function ProjectTimeline() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showCompletionPopup, setShowCompletionPopup] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [hoveredMilestoneBar, setHoveredMilestoneBar] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -466,8 +467,7 @@ function ProjectTimeline() {
       }}>
         {/* Month Slider */}
         <div style={{
-          padding: '20px 20px 20px 40px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
+          padding: '20px 20px 20px 40px'
         }}>
           <div style={{
             position: 'relative',
@@ -475,6 +475,19 @@ function ProjectTimeline() {
             flexDirection: 'column',
             alignItems: 'center'
           }}>
+            {/* Labels above */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              width: '100%',
+              marginBottom: '10px',
+              paddingLeft: '24px',
+              paddingRight: '24px'
+            }}>
+              <span style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>Jan</span>
+              <span style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>Dec</span>
+            </div>
+            
             {/* Double arrow with slider */}
             <div style={{
               position: 'relative',
@@ -482,6 +495,33 @@ function ProjectTimeline() {
               display: 'flex',
               alignItems: 'center'
             }}>
+              {/* Today's date line and label */}
+              <div style={{
+                position: 'absolute',
+                left: `calc(24px + ${(new Date().getMonth() / 11) * (100 - 4.8)}%)`,
+                top: '10px',
+                height: 'calc(100vh - 60px)',
+                width: '1px',
+                background: '#FF4444',
+                zIndex: 5,
+                pointerEvents: 'none'
+              }} />
+              <div style={{
+                position: 'absolute',
+                left: `calc(24px + ${(new Date().getMonth() / 11) * (100 - 4.8)}%)`,
+                top: '5px',
+                transform: 'translateX(-50%)',
+                background: '#FF4444',
+                color: 'white',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontSize: '10px',
+                fontWeight: '600',
+                zIndex: 6,
+                pointerEvents: 'none'
+              }}>
+                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </div>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ cursor: 'pointer' }} onClick={() => setSelectedMonth(Math.max(0, selectedMonth - 1))}>
                 <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="11 18L5 12L11 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -520,29 +560,6 @@ function ProjectTimeline() {
                 <path d="13 18L19 12L13 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            
-            {/* Labels underneath */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              width: '100%',
-              marginTop: '10px',
-              paddingLeft: '24px',
-              paddingRight: '24px'
-            }}>
-              <div style={{ position: 'relative' }}>
-                <span style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>Jan</span>
-                <div style={{
-                  position: 'absolute',
-                  left: '0',
-                  top: '20px',
-                  width: '1px',
-                  height: '20px',
-                  background: 'white'
-                }}></div>
-              </div>
-              <span style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>Dec</span>
-            </div>
           </div>
           <style>{`
             input[type="range"]::-webkit-slider-track {
@@ -578,6 +595,143 @@ function ProjectTimeline() {
             }
           `}</style>
         </div>
+        
+        {/* Milestone Bars Graph */}
+        {milestones.length > 0 && (
+          <div style={{ padding: '20px 40px', position: 'relative' }}>
+            {/* Today's date line */}
+            <div style={{
+              position: 'absolute',
+              left: `${24 + (new Date().getMonth() / 11) * (100 - 4.8)}%`,
+              top: '-40px',
+              height: 'calc(100% + 40px)',
+              width: '1px',
+              background: '#FF4444',
+              zIndex: 9,
+              pointerEvents: 'none'
+            }} />
+            {milestones.map((milestone, index) => {
+              const startMonth = milestone.startDate ? new Date(milestone.startDate).getMonth() : 0;
+              const endMonth = milestone.endDate ? new Date(milestone.endDate).getMonth() : 11;
+              const leftPercent = (startMonth / 11) * 100;
+              const widthPercent = ((endMonth - startMonth) / 11) * 100;
+              const barHeight = 80;
+              const topOffset = 0;
+              
+              return (
+                <div key={milestone.id} style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '80px',
+                  marginBottom: '15px'
+                }}
+                  onMouseEnter={(e) => {
+                    setHoveredMilestoneBar(milestone.id);
+                    setMousePosition({ x: e.clientX, y: e.clientY });
+                  }}
+                  onMouseMove={(e) => {
+                    if (hoveredMilestoneBar === milestone.id) {
+                      setMousePosition({ x: e.clientX, y: e.clientY });
+                    }
+                  }}
+                  onMouseLeave={() => setHoveredMilestoneBar(null)}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    left: `${leftPercent}%`,
+                    top: `${topOffset}px`,
+                    width: `${widthPercent}%`,
+                    height: `${barHeight}px`,
+                    background: '#FFFFE0',
+                    borderRadius: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingLeft: '10px',
+                    fontSize: '12px',
+                    color: '#333',
+                    fontWeight: '600'
+                  }}>
+                    {milestone.title}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        
+        {/* Milestone Details Popup */}
+        {hoveredMilestoneBar && (
+          <div style={{
+            position: 'fixed',
+            left: mousePosition.x + (mousePosition.x + 320 > window.innerWidth ? -320 : 10),
+            top: mousePosition.y + (mousePosition.y + 200 > window.innerHeight ? -200 : -10),
+            background: 'rgba(255, 255, 255, 0.95)',
+            borderRadius: '15px',
+            padding: '20px',
+            minWidth: '300px',
+            maxWidth: '400px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            zIndex: 1000,
+            border: '2px solid #FFD700',
+            pointerEvents: 'none'
+          }}>
+            {(() => {
+              const milestone = milestones.find(m => m.id === hoveredMilestoneBar);
+              if (!milestone) return null;
+              return (
+                <>
+                  <h3 style={{ color: '#333', margin: '0 0 15px 0', fontSize: '1.2rem' }}>{milestone.title}</h3>
+                  <div style={{ color: '#666', fontSize: '14px', marginBottom: '15px' }}>
+                    <div><strong>Start:</strong> {milestone.startDate || 'Not set'}</div>
+                    <div><strong>End:</strong> {milestone.endDate || 'Not set'}</div>
+                    <div><strong>Assigned:</strong> {milestone.assignedMembers?.join(', ') || 'None'}</div>
+                  </div>
+                  <div style={{ borderTop: '1px solid #ddd', paddingTop: '15px' }}>
+                    <h4 style={{ color: '#333', margin: '0 0 10px 0', fontSize: '1rem' }}>Tasks ({milestone.tasks?.length || 0})</h4>
+                    {milestone.tasks?.length > 0 ? (
+                      <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        {milestone.tasks.map(task => (
+                          <div key={task.id} style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '8px 0',
+                            borderBottom: '1px solid #eee',
+                            fontSize: '13px'
+                          }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{
+                                fontWeight: '600',
+                                color: task.status === 'Done' ? '#28a745' : '#333',
+                                textDecoration: task.status === 'Done' ? 'line-through' : 'none'
+                              }}>{task.title}</div>
+                              <div style={{ color: '#666', fontSize: '11px' }}>
+                                {task.assignee} • {task.dueDate || 'No deadline'}
+                              </div>
+                            </div>
+                            <div style={{
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              fontSize: '10px',
+                              fontWeight: '600',
+                              background: task.status === 'Done' ? '#d4edda' : task.status === 'In Progress' ? '#fff3cd' : '#f8d7da',
+                              color: task.status === 'Done' ? '#155724' : task.status === 'In Progress' ? '#856404' : '#721c24'
+                            }}>
+                              {task.status || 'Not Started'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ color: '#999', fontSize: '13px', fontStyle: 'italic' }}>No tasks yet</div>
+                    )}
+                  </div>
+                </>
+              );
+            })()
+            }
+          </div>
+        )}
         
         {milestones.length > 0 ? (
           <div style={{ flex: 1, padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
