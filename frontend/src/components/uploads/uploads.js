@@ -29,11 +29,8 @@ function Uploads() {
   };
 
   useEffect(() => {
-    // Auto-inject into ProjectView when on project page
-    const injectIntoProjectView = () => {
-      if (window.location.pathname.includes('/project/')) {
-        const workspace = document.querySelector('.project-workspace');
-        if (workspace && !workspace.querySelector('.upload-component')) {
+    // Initialize upload functionality
+    const initializeUploadFunctions = () => {
           const uploadDiv = document.createElement('div');
           uploadDiv.className = 'upload-component';
           uploadDiv.innerHTML = `
@@ -64,7 +61,7 @@ function Uploads() {
               </div>
             </div>
           `;
-          workspace.appendChild(uploadDiv);
+          // Functions are now available globally
           
           // Add global functions
           window.quickUpload = () => {
@@ -453,17 +450,41 @@ function Uploads() {
           // Load folders and history immediately
           window.loadFolders();
           window.loadHistory();
-        }
-      }
     };
     
-    // Try to inject immediately and also after a delay
-    injectIntoProjectView();
-    setTimeout(injectIntoProjectView, 1000);
-    setTimeout(injectIntoProjectView, 3000);
+    initializeUploadFunctions();
   }, []);
 
-  return null;
+  return (
+    <div className="upload-component">
+      <div style={{display: 'flex', gap: '20px'}}>
+        <div style={{flex: '0 0 200px'}}>
+          <button onClick={() => window.quickUpload && window.quickUpload()} style={{margin: '10px 5px 10px 0', padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%'}}>
+            Upload File
+          </button>
+          <button onClick={() => window.createFolder && window.createFolder()} style={{margin: '10px 0', padding: '8px 16px', background: '#ffc107', color: 'black', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%'}}>
+            Create Folder
+          </button>
+          <label style={{display: 'flex', alignItems: 'center', margin: '10px 0', fontSize: '12px'}}>
+            <input type="checkbox" id="log-history-toggle" style={{marginRight: '5px'}} />
+            Log to version history
+          </label>
+          <button onClick={() => window.saveSnapshot && window.saveSnapshot()} style={{margin: '10px 0', padding: '8px 16px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%'}}>
+            Save Snapshot
+          </button>
+          <input type="file" id="hidden-file-input" accept=".txt,.pdf,.doc,.docx,.jpg,.png,.gif" style={{display: 'none'}} />
+          <div id="upload-status" style={{marginTop: '10px'}}></div>
+          <div style={{marginTop: '20px', borderTop: '1px solid #ddd', paddingTop: '15px'}}>
+            <h5 style={{margin: '0 0 10px 0', fontSize: '14px'}}>Version History</h5>
+            <div id="version-history" style={{maxHeight: '200px', overflowY: 'scroll', fontSize: '12px', scrollbarGutter: 'stable', WebkitOverflowScrolling: 'touch'}}></div>
+          </div>
+        </div>
+        <div style={{flex: 1, minHeight: '300px', borderLeft: '1px solid #ddd', paddingLeft: '20px'}}>
+          <div id="folder-list"></div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default Uploads;
