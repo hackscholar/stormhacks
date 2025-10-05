@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function CreateProject() {
@@ -7,6 +7,13 @@ function CreateProject() {
   const [generatedCode, setGeneratedCode] = useState('');
   const [status, setStatus] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.style.background = '#8178A1';
+    return () => {
+      document.body.style.background = '';
+    };
+  }, []);
 
   const addCollaborator = () => {
     if (collaborators.length < 32) {
@@ -108,72 +115,117 @@ function CreateProject() {
   };
 
   return (
-    <div className="container">
-      <h2>Create Project</h2>
-      
-      {status === 'failed' ? (
-        <div className="error-message">
-          <h3>Failed</h3>
-          <p>Project creation failed. Please try again.</p>
-          <button onClick={() => setStatus('')}>Try Again</button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Project Name"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            required
-          />
-          
-          <div className="collaborators-header">
-            <h3>Collaborators ({collaborators.length}/32)</h3>
-            <button 
-              type="button" 
-              onClick={addCollaborator} 
-              className="add-collaborator-btn"
-              disabled={collaborators.length >= 32}
-            >
-              + Add Collaborator
-            </button>
+    <div>
+      <div className="container">
+        <h2>Create Project</h2>
+        
+        {status === 'failed' ? (
+          <div className="error-message">
+            <h3>Failed</h3>
+            <p>Project creation failed. Please try again.</p>
+            <button onClick={() => setStatus('')}>Try Again</button>
           </div>
-          
-          <div className="collaborators-grid">
-            {collaborators.map((collab, collabIndex) => (
-              <div key={collabIndex} className="collaborator-section">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={collab.email}
-                  onChange={(e) => updateCollaborator(collabIndex, 'email', e.target.value)}
-                />
-                
-                <div className="responsibilities-section">
-                  <h4>Responsibilities:</h4>
-                  {collab.responsibilities.map((resp, respIndex) => (
-                    <div key={respIndex} className="responsibility-row">
-                      <input
-                        type="text"
-                        placeholder="Responsibility"
-                        value={resp}
-                        onChange={(e) => updateResponsibility(collabIndex, respIndex, e.target.value)}
-                      />
-                      <button type="button" onClick={() => removeResponsibility(collabIndex, respIndex)}>×</button>
-                    </div>
-                  ))}
-                  <button type="button" onClick={() => addResponsibility(collabIndex)}>+ Add Responsibility</button>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              placeholder="Project Name"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              required
+            />
+            
+            <div className="collaborators-header">
+              <h3>Collaborators ({collaborators.length}/32)</h3>
+              <button 
+                type="button" 
+                onClick={addCollaborator} 
+                className="add-collaborator-btn"
+                disabled={collaborators.length >= 32}
+                style={{ marginLeft: '20px' }}
+              >
+                + Add Collaborator
+              </button>
+            </div>
+            
+            <div className="collaborators-grid">
+              {collaborators.map((collab, collabIndex) => (
+                <div key={collabIndex} className="collaborator-section" style={{ position: 'relative' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => removeCollaborator(collabIndex)} 
+                    style={{
+                      position: 'absolute',
+                      top: '20px',
+                      right: '16px',
+                      background: '#dc3545',
+                      color: 'white',
+                      border: 'none',
+                      width: '25px',
+                      height: '25px',
+                      borderRadius: '50%',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >×</button>
+                  
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    value={collab.email}
+                    onChange={(e) => updateCollaborator(collabIndex, 'email', e.target.value)}
+                  />
+                  
+                  <div className="responsibilities-section">
+                    <h4>Responsibilities:</h4>
+                    {collab.responsibilities.map((resp, respIndex) => (
+                      <div key={respIndex} className="responsibility-row">
+                        <input
+                          type="text"
+                          placeholder="Responsibility"
+                          value={resp}
+                          onChange={(e) => updateResponsibility(collabIndex, respIndex, e.target.value)}
+                        />
+                        <button type="button" onClick={() => removeResponsibility(collabIndex, respIndex)} style={{
+                          background: '#dc3545',
+                          color: 'white',
+                          border: 'none',
+                          width: '25px',
+                          height: '25px',
+                          borderRadius: '50%',
+                          cursor: 'pointer',
+                          fontSize: '16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>-</button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => addResponsibility(collabIndex)}>+ Add Responsibility</button>
+                  </div>
                 </div>
-                
-                <button type="button" onClick={() => removeCollaborator(collabIndex)} className="remove-collaborator-btn">× Remove</button>
-              </div>
-            ))}
-          </div>
-          <button type="submit">Create Project</button>
-        </form>
-      )}
+              ))}
+            </div>
+            <button type="submit">Create Project</button>
+          </form>
+        )}
+      </div>
       
-      <button onClick={() => navigate('/dashboard')}>Back</button>
+      <div style={{ textAlign: 'center', marginTop: '20px' }}>
+        <button onClick={() => navigate('/dashboard')} style={{
+          background: '#470F59',
+          color: 'white',
+          border: 'none',
+          padding: '10px 20px',
+          borderRadius: '20px',
+          cursor: 'pointer',
+          fontFamily: 'Archivo',
+          fontWeight: '700'
+        }}>Back to Dashboard</button>
+      </div>
     </div>
   );
 }
