@@ -60,8 +60,8 @@ h2 {
 }
 
 .toggle-item {
-  width: 180px;
-  height: 180px;
+  width: 220px;
+  height: 220px;
   padding: 1rem;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 20px;
@@ -90,7 +90,7 @@ h2 {
 }
 
 .toggle-item p {
-  color: #7C7171;
+  color: white;
   font-family: 'Archivo';
   font-weight: 400;
   margin: 0;

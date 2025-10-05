@@ -131,14 +131,23 @@ function Dashboard() {
       
       <div className="toggles-container">
         <div className="toggle-item" onClick={() => handleToggleClick('Create Project')}>
+          <svg width="50" height="50" viewBox="0 0 24 24" fill="#470F59" style={{ marginBottom: '10px' }}>
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
           <h3>Create Project</h3>
           <p>Start a new project</p>
         </div>
         <div className="toggle-item" onClick={() => handleToggleClick('Join Project')}>
+          <svg width="50" height="50" viewBox="0 0 24 24" fill="#470F59" style={{ marginBottom: '10px' }}>
+            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-1 16H9V7h9v14z"/>
+          </svg>
           <h3>Join Project</h3>
           <p>Join an existing project</p>
         </div>
         <div className="toggle-item" onClick={() => handleToggleClick('View Projects')}>
+          <svg width="50" height="50" viewBox="0 0 24 24" fill="#470F59" style={{ marginBottom: '10px' }}>
+            <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+          </svg>
           <h3>View Projects</h3>
           <p>See all your projects</p>
         </div>
