@@ -570,6 +570,7 @@ p {
   padding: 1.5rem;
   background: rgba(255, 250, 250, 0.9);
   border-radius: 20px;
+  border: 1px .project-details {
   border: 1px solid rgba(71, 15, 89, 0.2);
   box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
 }
@@ -633,7 +634,9 @@ p {
   font-family: 'Archivo';
   font-weight: 400;
   font-size: 14px;
-}hover {
+}
+
+.toggle-item:hover {
   background: #5a1a6b;
   transform: translateY(-2px);
   box-shadow: 4px 4px 8px rgba(0,0,0,0.2);
