@@ -6,6 +6,7 @@ function Dashboard() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [userName, setUserName] = useState('');
+  const [hideTimeout, setHideTimeout] = useState(null);
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -14,6 +15,21 @@ function Dashboard() {
       setUserName(currentUser.split('@')[0]);
     }
   }, []);
+
+  const handleMouseEnter = () => {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+      setHideTimeout(null);
+    }
+    setShowDropdown(true);
+  };
+
+  const handleMouseLeave = () => {
+    const timeout = setTimeout(() => {
+      setShowDropdown(false);
+    }, 300);
+    setHideTimeout(timeout);
+  };
 
   React.useEffect(() => {
     document.body.className = 'dashboard-page';
@@ -70,8 +86,8 @@ function Dashboard() {
     <div className="dashboard-container">
       <div 
         className="profile-dropdown"
-        onMouseEnter={() => setShowDropdown(true)}
-        onMouseLeave={() => setShowDropdown(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <div className="profile-avatar">
           <div className="avatar-circle">
