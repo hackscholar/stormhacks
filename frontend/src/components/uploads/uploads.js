@@ -34,29 +34,29 @@ function Uploads() {
           const uploadDiv = document.createElement('div');
           uploadDiv.className = 'upload-component';
           uploadDiv.innerHTML = `
-            <div style="display: flex; gap: 20px;">
-              <div style="flex: 0 0 200px;">
-                <button onclick="window.quickUpload()" style="margin: 10px 5px 10px 0; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
+            <div style="min-height: 100vh; background: #8178A1; display: flex; font-family: Arial, sans-serif;">
+              <div style="width: 350px; background: rgba(255, 255, 255, 0.1); padding: 20px; backdrop-filter: blur(10px); border-right: 1px solid rgba(255, 255, 255, 0.2);">
+                <button onclick="window.quickUpload()" style="margin: 10px 5px 10px 0; padding: 8px 16px; background: rgba(255, 249, 196, 0.6); color: #333; border: 2px solid #fffacd; border-radius: 25px; cursor: pointer; width: 100%; font-weight: 600;">
                   Upload File
                 </button>
-                <button onclick="window.createFolder()" style="margin: 10px 0; padding: 8px 16px; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
+                <button onclick="window.createFolder()" style="margin: 10px 0; padding: 8px 16px; background: rgba(255, 249, 196, 0.6); color: #333; border: 2px solid #fffacd; border-radius: 25px; cursor: pointer; width: 100%; font-weight: 600;">
                   Create Folder
                 </button>
-                <label style="display: flex; align-items: center; margin: 10px 0; font-size: 12px;">
+                <label style="display: flex; align-items: center; margin: 10px 0; font-size: 12px; color: white;">
                   <input type="checkbox" id="log-history-toggle" style="margin-right: 5px;">
                   Log to version history
                 </label>
-                <button onclick="window.saveSnapshot()" style="margin: 10px 0; padding: 8px 16px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
+                <button onclick="window.saveSnapshot()" style="margin: 10px 0; padding: 8px 16px; background: rgba(255, 249, 196, 0.6); color: #333; border: 2px solid #fffacd; border-radius: 25px; cursor: pointer; width: 100%; font-weight: 600;">
                   Save Snapshot
                 </button>
                 <input type="file" id="hidden-file-input" accept=".txt,.pdf,.doc,.docx,.jpg,.png,.gif" style="display: none;" />
                 <div id="upload-status" style="margin-top: 10px;"></div>
-                <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 15px;">
-                  <h5 style="margin: 0 0 10px 0; font-size: 14px;">Version History</h5>
+                <div style="margin-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.3); padding-top: 15px;">
+                  <h5 style="margin: 0 0 10px 0; font-size: 14px; color: white;">Version History</h5>
                   <div id="version-history" style="max-height: 200px; overflow-y: scroll; font-size: 12px; scrollbar-gutter: stable; -webkit-overflow-scrolling: touch;"></div>
                 </div>
               </div>
-              <div style="flex: 1; min-height: 300px; border-left: 1px solid #ddd; padding-left: 20px;">
+              <div style="flex: 1; padding: 40px; display: flex; justify-content: center; align-items: flex-start;">
                 <div id="folder-list"></div>
               </div>
             </div>
@@ -65,17 +65,21 @@ function Uploads() {
           
           // Add global functions
           window.quickUpload = () => {
-            window.loadFolders().then(() => {
-              const fileInput = document.getElementById('hidden-file-input');
-              fileInput.click();
-            });
+            const fileInput = document.getElementById('hidden-file-input');
+            fileInput.click();
           };
           
-          document.getElementById('hidden-file-input').addEventListener('change', (e) => {
-            if (e.target.files[0]) {
-              window.showFolderSelection(e.target.files[0]);
+          // Add event listener after a short delay to ensure DOM is ready
+          setTimeout(() => {
+            const fileInput = document.getElementById('hidden-file-input');
+            if (fileInput) {
+              fileInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) {
+                  window.showFolderSelection(e.target.files[0]);
+                }
+              });
             }
-          });
+          }, 100);
           
           window.showFolderSelection = (file) => {
             const folders = window.currentFolders || [];
@@ -247,11 +251,15 @@ function Uploads() {
             const dropdown = document.getElementById('folder-dropdown');
             const selectedFolder = dropdown.value;
             window.uploadSelectedFile(window.currentFile, selectedFolder);
-            document.body.removeChild(window.currentModal);
+            if (window.currentModal && window.currentModal.parentNode) {
+              document.body.removeChild(window.currentModal);
+            }
           };
           
           window.cancelUpload = () => {
-            document.body.removeChild(window.currentModal);
+            if (window.currentModal && window.currentModal.parentNode) {
+              document.body.removeChild(window.currentModal);
+            }
           };
           
           window.uploadSelectedFile = async (file, folderName) => {
@@ -478,29 +486,29 @@ function Uploads() {
 
   return (
     <div className="upload-component">
-      <div style={{display: 'flex', gap: '20px'}}>
-        <div style={{flex: '0 0 200px'}}>
-          <button onClick={() => window.quickUpload && window.quickUpload()} style={{margin: '10px 5px 10px 0', padding: '8px 16px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%'}}>
+      <div style={{minHeight: '100vh', background: '#8178A1', display: 'flex', fontFamily: 'Arial, sans-serif'}}>
+        <div style={{width: '350px', background: 'rgba(255, 255, 255, 0.1)', padding: '20px', backdropFilter: 'blur(10px)', borderRight: '1px solid rgba(255, 255, 255, 0.2)'}}>
+          <button onClick={() => window.quickUpload && window.quickUpload()} style={{margin: '10px 5px 10px 0', padding: '8px 16px', background: 'rgba(255, 249, 196, 0.6)', color: '#333', border: '2px solid #fffacd', borderRadius: '25px', cursor: 'pointer', width: '100%', fontWeight: '600'}}>
             Upload File
           </button>
-          <button onClick={() => window.createFolder && window.createFolder()} style={{margin: '10px 0', padding: '8px 16px', background: '#ffc107', color: 'black', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%'}}>
+          <button onClick={() => window.createFolder && window.createFolder()} style={{margin: '10px 0', padding: '8px 16px', background: 'rgba(255, 249, 196, 0.6)', color: '#333', border: '2px solid #fffacd', borderRadius: '25px', cursor: 'pointer', width: '100%', fontWeight: '600'}}>
             Create Folder
           </button>
-          <label style={{display: 'flex', alignItems: 'center', margin: '10px 0', fontSize: '12px'}}>
+          <label style={{display: 'flex', alignItems: 'center', margin: '10px 0', fontSize: '12px', color: 'white'}}>
             <input type="checkbox" id="log-history-toggle" style={{marginRight: '5px'}} />
             Log to version history
           </label>
-          <button onClick={() => window.saveSnapshot && window.saveSnapshot()} style={{margin: '10px 0', padding: '8px 16px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%'}}>
+          <button onClick={() => window.saveSnapshot && window.saveSnapshot()} style={{margin: '10px 0', padding: '8px 16px', background: 'rgba(255, 249, 196, 0.6)', color: '#333', border: '2px solid #fffacd', borderRadius: '25px', cursor: 'pointer', width: '100%', fontWeight: '600'}}>
             Save Snapshot
           </button>
           <input type="file" id="hidden-file-input" accept=".txt,.pdf,.doc,.docx,.jpg,.png,.gif" style={{display: 'none'}} />
           <div id="upload-status" style={{marginTop: '10px'}}></div>
-          <div style={{marginTop: '20px', borderTop: '1px solid #ddd', paddingTop: '15px'}}>
-            <h5 style={{margin: '0 0 10px 0', fontSize: '14px'}}>Version History</h5>
+          <div style={{marginTop: '20px', borderTop: '1px solid rgba(255, 255, 255, 0.3)', paddingTop: '15px'}}>
+            <h5 style={{margin: '0 0 10px 0', fontSize: '14px', color: 'white'}}>Version History</h5>
             <div id="version-history" style={{maxHeight: '200px', overflowY: 'scroll', fontSize: '12px', scrollbarGutter: 'stable', WebkitOverflowScrolling: 'touch'}}></div>
           </div>
         </div>
-        <div style={{flex: 1, minHeight: '300px', borderLeft: '1px solid #ddd', paddingLeft: '20px'}}>
+        <div style={{flex: 1, padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start'}}>
           <div id="folder-list"></div>
         </div>
       </div>
