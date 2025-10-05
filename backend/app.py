@@ -436,6 +436,20 @@ def add_milestone(project_id):
         assigned_members=','.join(data['assignedMembers']) if isinstance(data['assignedMembers'], list) else data['assignedMembers']
     )
     db.session.add(milestone)
+    db.session.flush()
+    
+    # Add tasks if provided
+    for task_data in data.get('tasks', []):
+        task = Task(
+            milestone_id=milestone.id,
+            title=task_data['title'],
+            due_date=task_data.get('dueDate', ''),
+            assignee=task_data.get('assignee', ''),
+            responsibility=task_data.get('responsibility', ''),
+            status='To Do'
+        )
+        db.session.add(task)
+    
     db.session.commit()
     return jsonify({'success': True, 'milestone_id': milestone.id})
 
@@ -468,12 +482,31 @@ def update_task_status(task_id):
         milestone = Milestone.query.get(task.milestone_id)
         if milestone:
             tasks = Task.query.filter_by(milestone_id=milestone.id).all()
-            completed = len([t for t in tasks if t.status == 'Done'])
-            milestone.progress = (completed / len(tasks)) * 100 if tasks else 0
+            if tasks:
+                task_progress = sum(
+                    100 if t.status == 'Done' else 50 if t.status == 'In Progress' else 0 
+                    for t in tasks
+                )
+                milestone.progress = task_progress / len(tasks)
+            else:
+                milestone.progress = 0
             db.session.commit()
         
         return jsonify({'success': True})
     return jsonify({'success': False, 'message': 'Task not found'})
+
+@app.route('/api/milestone/<milestone_id>', methods=['DELETE'])
+@cross_origin()
+def delete_milestone(milestone_id):
+    milestone = Milestone.query.get(milestone_id)
+    if milestone:
+        # Delete all tasks associated with this milestone
+        Task.query.filter_by(milestone_id=milestone_id).delete()
+        # Delete the milestone
+        db.session.delete(milestone)
+        db.session.commit()
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'message': 'Milestone not found'})
 
 # Profile management endpoints
 @app.route('/api/user-profile/<email>', methods=['GET'])
