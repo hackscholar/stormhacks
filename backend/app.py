@@ -6,6 +6,7 @@ import json
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -49,7 +50,6 @@ class Responsibility(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     collaborator_id = db.Column(db.Integer, db.ForeignKey('collaborator.id'), nullable=False)
     description = db.Column(db.String(500), nullable=False)
-
 @app.route('/api/create-project', methods=['POST'])
 @cross_origin()
 def create_project():
@@ -109,7 +109,7 @@ def signup():
         if User.query.filter_by(email=email).first():
             return jsonify({'success': False, 'message': 'User already exists'})
         
-        new_user = User(email=email, password=password)
+        new_user = User(email=email, password=generate_password_hash(password))
         db.session.add(new_user)
         db.session.commit()
         
@@ -128,7 +128,7 @@ def login():
         
         user = User.query.filter_by(email=email).first()
         
-        if user and user.password == password:
+        if user and check_password_hash(user.password, password):
             return jsonify({'success': True, 'message': 'Login successful'})
         
         return jsonify({'success': False, 'message': 'Invalid credentials'})
@@ -373,6 +373,10 @@ Synchronus Team
     except Exception as e:
         print(f'Send invitations error: {e}')
         return jsonify({'success': False, 'message': 'Failed to send invitations'})
+
+# Register blueprints
+from routes.uploads import uploads_bp
+app.register_blueprint(uploads_bp)
 
 if __name__ == '__main__':
     with app.app_context():
