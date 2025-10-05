@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const Chatroom = ({ currentUser, chatId = 'general' }) => {
+const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [replyTo, setReplyTo] = useState(null);
@@ -26,6 +26,8 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [topicToDelete, setTopicToDelete] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [userProfiles, setUserProfiles] = useState({});
+  const [currentUserName, setCurrentUserName] = useState('');
   
   const getRandomGradient = () => {
     const gradients = [
@@ -45,6 +47,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
     fetchTopics();
     fetchMessages();
     markAsRead(activeChatId);
+    fetchCurrentUserName();
     
     const interval = setInterval(() => {
       fetch(`http://localhost:5000/api/chat/messages?chat_id=${activeChatId}`)
@@ -132,8 +135,8 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
         // Handle file upload with optional text
         const formData = new FormData();
         formData.append('file', selectedFile);
-        formData.append('user_id', currentUser.id);
-        formData.append('username', currentUser.name);
+        formData.append('user_id', currentUser.id || localStorage.getItem('currentUser') || 'user');
+        formData.append('username', currentUser.name || currentUserName || 'User');
         formData.append('chat_id', activeChatId);
         if (newMessage.trim()) formData.append('content', newMessage);
         if (replyTo) formData.append('reply_to', replyTo);
@@ -165,8 +168,8 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: currentUser.id,
-            username: currentUser.name,
+            user_id: currentUser.id || localStorage.getItem('currentUser') || 'user',
+            username: currentUser.name || currentUserName || 'User',
             content: newMessage,
             reply_to: replyTo,
             chat_id: activeChatId
@@ -179,7 +182,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
           // Fallback: add message locally
           const newMsg = {
             id: Date.now(),
-            username: currentUser.name,
+            username: currentUser.name || currentUserName || 'User',
             content: newMessage,
             timestamp: new Date().toISOString(),
             reply_to: replyTo
@@ -193,7 +196,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
       // Fallback: add message locally
       const newMsg = {
         id: Date.now(),
-        username: currentUser.name,
+        username: currentUser.name || currentUserName || 'User',
         content: newMessage.trim() || null,
         file_path: selectedFile ? `uploads/${selectedFile.name}` : null,
         timestamp: new Date().toISOString(),
@@ -339,8 +342,38 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
     return new Date(timestamp).toLocaleString();
   };
 
+  const fetchCurrentUserName = async () => {
+    const email = localStorage.getItem('currentUser');
+    if (email) {
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/api/user-profile/${encodeURIComponent(email)}`);
+        const data = await response.json();
+        if (data.success && data.profile.name) {
+          setCurrentUserName(data.profile.name);
+        }
+      } catch (error) {}
+    }
+  };
+
+  const fetchUserProfile = async (username) => {
+    if (userProfiles[username]) return;
+    
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/api/user-profile/${encodeURIComponent(username)}`);
+      const data = await response.json();
+      
+      if (data.success && data.profile.profilePhoto) {
+        setUserProfiles(prev => ({
+          ...prev,
+          [username]: `http://127.0.0.1:5000${data.profile.profilePhoto}`
+        }));
+      }
+    } catch (error) {}
+  };
+
   const getUserAvatar = (username) => {
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&size=40&background=8178A1`;
+    fetchUserProfile(username);
+    return userProfiles[username] || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&size=40&background=8178A1`;
   };
 
   const activeChat = chatrooms.find(chat => chat.id === activeChatId) || chatrooms[0];
@@ -361,7 +394,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
   return (
     <div className="chatroom-compact" style={{
       width: '100%',
-      height: '500px',
+      height: 'calc(100vh - 120px)',
       background: '#8178A1',
       display: 'flex',
       fontFamily: 'Archivo, sans-serif',
@@ -373,14 +406,14 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
         width: sidebarCollapsed ? '60px' : '300px',
         background: 'rgba(255, 250, 250, 0.55)',
         borderRadius: '0 45px 0 0',
-        padding: sidebarCollapsed ? '30px 10px' : '30px 20px',
+        padding: sidebarCollapsed ? '15px 10px' : '15px 20px',
         boxShadow: '4px 0 4px rgba(0,0,0,0.1)',
         transition: 'all 0.3s ease',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '30px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
           {!sidebarCollapsed && (
             <h2 style={{
               color: '#470F59',
@@ -414,8 +447,8 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
             onMouseEnter={() => setHoveredTopic(room.id)}
             onMouseLeave={() => setHoveredTopic(null)}
             style={{
-              padding: '15px 20px',
-              margin: '10px 0',
+              padding: '10px 15px',
+              margin: '5px 0',
               background: 'white',
               color: activeChatId === room.id ? '#470F59' : '#7C7171',
               borderRadius: '20px',
