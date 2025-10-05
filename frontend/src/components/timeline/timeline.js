@@ -1154,7 +1154,7 @@ function ProjectTimeline() {
               }}
               style={{
                 width: '100%',
-                padding: '12px',
+                padding: '13px',
                 margin: '10px 0',
                 border: '1px solid #ddd',
                 borderRadius: '8px',
