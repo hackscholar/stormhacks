@@ -13,8 +13,12 @@ function Dashboard() {
   }, []);
 
   const handleToggleClick = (toggleType) => {
-    console.log(`${toggleType} clicked`);
-    // Functionality to be implemented
+    if (toggleType === 'Create Project') {
+      navigate('/create-project');
+    } else {
+      console.log(`${toggleType} clicked`);
+      // Functionality to be implemented
+    }
   };
 
   const handleSignOut = () => {

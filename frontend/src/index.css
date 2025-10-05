@@ -19,7 +19,9 @@ body.dashboard-page {
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  width: 300px;
+  width: auto;
+  max-width: 95vw;
+  min-width: 300px;
 }
 
 h2 {
@@ -171,4 +173,111 @@ a {
 p {
   text-align: center;
   margin-top: 1rem;
+}
+
+.collaborator-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.collaborator-row input {
+  flex: 1;
+}
+
+.collaborator-row button {
+  padding: 0.5rem;
+  background: #dc3545;
+  font-size: 0.8rem;
+}
+
+.success-message {
+  text-align: center;
+  padding: 2rem;
+  background: #d4edda;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  text-align: center;
+  padding: 2rem;
+  background: #f8d7da;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  color: #721c24;
+}
+
+.collaborators-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.add-collaborator-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.add-collaborator-btn:disabled {
+  background: #6c757d !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.collaborators-grid {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.collaborator-section {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 8px;
+  width: 250px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.remove-collaborator-btn {
+  background: #dc3545 !important;
+  padding: 0.5rem 1rem !important;
+  font-size: 0.8rem !important;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.remove-collaborator-btn:hover {
+  background: #c82333 !important;
+}
+
+.responsibilities-section {
+  margin: 1rem 0;
+}
+
+.responsibilities-section h4 {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.responsibility-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.responsibility-row input {
+  flex: 1;
+}
+
+.responsibility-row button {
+  padding: 0.25rem 0.5rem;
+  background: #dc3545;
+  font-size: 1rem;
+  width: 30px;
 }
