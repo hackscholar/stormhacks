@@ -163,6 +163,7 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
           fetchMessages();
         } else {
           // Fallback: add file message locally
+          const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
           const newMsg = {
             id: Date.now(),
             username: currentUser.name,
@@ -173,7 +174,7 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
           };
           const updatedMessages = [...messages, newMsg];
           setMessages(updatedMessages);
-          localStorage.setItem(`messages_${activeChatId}`, JSON.stringify(updatedMessages));
+          localStorage.setItem(`messages_${activeChatId}_${currentProject.id}`, JSON.stringify(updatedMessages));
         }
       } else {
         // Handle text-only message
@@ -204,11 +205,12 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
           };
           const updatedMessages = [...messages, newMsg];
           setMessages(updatedMessages);
-          localStorage.setItem(`messages_${activeChatId}`, JSON.stringify(updatedMessages));
+          localStorage.setItem(`messages_${activeChatId}_${currentProject.id}`, JSON.stringify(updatedMessages));
         }
       }
     } catch (error) {
       // Fallback: add message locally
+      const currentProject = JSON.parse(localStorage.getItem('currentProject') || '{}');
       const newMsg = {
         id: Date.now(),
         username: currentUser.name || currentUserName || 'User',
@@ -219,7 +221,7 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
       };
       const updatedMessages = [...messages, newMsg];
       setMessages(updatedMessages);
-      localStorage.setItem(`messages_${activeChatId}`, JSON.stringify(updatedMessages));
+      localStorage.setItem(`messages_${activeChatId}_${currentProject.id}`, JSON.stringify(updatedMessages));
     }
     
     setNewMessage('');

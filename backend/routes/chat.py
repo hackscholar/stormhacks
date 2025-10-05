@@ -26,12 +26,13 @@ def init_chat_db():
     )''')
     
     conn.execute('''CREATE TABLE IF NOT EXISTS chat_topics (
-        id TEXT NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        topic_id TEXT NOT NULL,
         name TEXT NOT NULL,
         color TEXT NOT NULL,
         project_id TEXT NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (id, project_id)
+        UNIQUE(topic_id, project_id)
     )''')
     
     conn.execute('''CREATE TABLE IF NOT EXISTS chat_groups (
@@ -130,14 +131,23 @@ def get_topics():
     
     # If no topics exist for this project, create default ones
     if not topics:
-        conn.execute('''INSERT INTO chat_topics (id, name, color, project_id) VALUES 
-            ('general', 'General', 'linear-gradient(135deg, #1e3c72, #c9a9dd)', ?),
-            ('random', 'Random', 'linear-gradient(135deg, #2c5aa0, #b19cd9)', ?)''', (project_id, project_id))
+        conn.execute('''INSERT INTO chat_topics (topic_id, name, color, project_id) VALUES 
+            ('general', 'General', 'linear-gradient(135deg, #1e3c72, #c9a9dd)', ?)''', (project_id,))
         conn.commit()
         topics = conn.execute('SELECT * FROM chat_topics WHERE project_id = ? ORDER BY created_at', (project_id,)).fetchall()
     
+    # Convert to expected format
+    result = []
+    for topic in topics:
+        result.append({
+            'id': topic[1],  # topic_id
+            'name': topic[2],
+            'color': topic[3],
+            'project_id': topic[4]
+        })
+    
     conn.close()
-    return jsonify([dict(topic) for topic in topics])
+    return jsonify(result)
 
 @chat_bp.route('/topics', methods=['POST'])
 def create_topic():
@@ -148,7 +158,7 @@ def create_topic():
     
     conn = get_db()
     conn.execute(
-        'INSERT INTO chat_topics (id, name, color, project_id) VALUES (?, ?, ?, ?)',
+        'INSERT INTO chat_topics (topic_id, name, color, project_id) VALUES (?, ?, ?, ?)',
         (data['id'], data['name'], data['color'], project_id)
     )
     conn.commit()
@@ -165,7 +175,7 @@ def delete_topic(topic_id):
     # Delete all messages for this topic in this project
     conn.execute('DELETE FROM messages WHERE chat_id = ? AND project_id = ?', (topic_id, project_id))
     # Delete the topic itself
-    conn.execute('DELETE FROM chat_topics WHERE id = ? AND project_id = ?', (topic_id, project_id))
+    conn.execute('DELETE FROM chat_topics WHERE topic_id = ? AND project_id = ?', (topic_id, project_id))
     conn.commit()
     conn.close()
     return jsonify({'status': 'deleted'})
