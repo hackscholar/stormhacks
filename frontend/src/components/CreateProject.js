@@ -82,7 +82,24 @@ function CreateProject() {
         projects.push(result.project);
         localStorage.setItem('projects', JSON.stringify(projects));
         
-        // Data is now stored in database via backend API
+        // Send email invitations
+        try {
+          const emailResponse = await fetch('http://127.0.0.1:5000/api/send-invitations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              project_name: projectName,
+              project_code: result.project.code,
+              creator_email: localStorage.getItem('currentUser') || 'creator@example.com',
+              collaborators: collaborators.filter(c => c.email)
+            })
+          });
+          
+          const emailResult = await emailResponse.json();
+          console.log('Email invitations:', emailResult);
+        } catch (emailError) {
+          console.error('Failed to send email invitations:', emailError);
+        }
       } else {
         setStatus('failed');
       }

@@ -3,6 +3,9 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import uuid
 import json
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 
@@ -11,6 +14,13 @@ from flask_cors import CORS, cross_origin
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///stormhacks.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Email configuration (using Gmail SMTP)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'your-email@gmail.com'  # Replace with your email
+app.config['MAIL_PASSWORD'] = 'your-app-password'     # Replace with app password
 
 db = SQLAlchemy(app)
 
@@ -184,6 +194,86 @@ def all_users():
     users = User.query.all()
     user_list = [{'id': u.id, 'email': u.email, 'password': u.password} for u in users]
     return jsonify({'users': user_list, 'count': len(user_list)})
+
+def send_invitation_email(to_email, project_name, role, project_code, creator_email):
+    try:
+        # Create message
+        msg = MIMEMultipart()
+        msg['From'] = app.config['MAIL_USERNAME']
+        msg['To'] = to_email
+        msg['Subject'] = f'Project Invitation: {project_name}'
+        
+        # Email body
+        body = f"""
+        Hello!
+        
+        You have been invited to join the project "{project_name}" as {role}.
+        
+        Project Code: {project_code}
+        Invited by: {creator_email}
+        
+        To join the project, use the code above in the StormHacks application.
+        
+        Best regards,
+        StormHacks Team
+        """
+        
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        server = smtplib.SMTP(app.config['MAIL_SERVER'], app.config['MAIL_PORT'])
+        server.starttls()
+        server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+        text = msg.as_string()
+        server.sendmail(app.config['MAIL_USERNAME'], to_email, text)
+        server.quit()
+        
+        return True
+    except Exception as e:
+        print(f'Email error: {e}')
+        return False
+
+@app.route('/api/send-invitations', methods=['POST'])
+@cross_origin()
+def send_invitations():
+    try:
+        data = request.json
+        project_name = data.get('project_name')
+        project_code = data.get('project_code')
+        creator_email = data.get('creator_email')
+        collaborators = data.get('collaborators', [])
+        
+        sent_count = 0
+        failed_emails = []
+        
+        for collab in collaborators:
+            email = collab.get('email')
+            responsibilities = ', '.join(collab.get('responsibilities', []))
+            
+            if email and responsibilities:
+                success = send_invitation_email(
+                    email, 
+                    project_name, 
+                    responsibilities, 
+                    project_code, 
+                    creator_email
+                )
+                
+                if success:
+                    sent_count += 1
+                else:
+                    failed_emails.append(email)
+        
+        return jsonify({
+            'success': True,
+            'sent_count': sent_count,
+            'failed_emails': failed_emails,
+            'message': f'Sent {sent_count} invitations successfully'
+        })
+        
+    except Exception as e:
+        print(f'Send invitations error: {e}')
+        return jsonify({'success': False, 'message': 'Failed to send invitations'})
 
 if __name__ == '__main__':
     with app.app_context():
