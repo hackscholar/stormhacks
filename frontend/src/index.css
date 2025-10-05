@@ -829,15 +829,15 @@ p {
   display: none;
 }
 
-.name-input {
+.settings .name-input {
   top: 180px;
 }
 
-.email-input {
+.settings .email-input {
   top: 250px;
 }
 
-.password-input {
+.settings .password-input {
   top: 320px;
 }
 
@@ -858,7 +858,7 @@ p {
   font-weight: 400;
 }
 
-.signin-button {
+.settings .signin-button {
   top: 460px;
 }
 

@@ -579,4 +579,4 @@ if __name__ == '__main__':
         db.create_all()
         print('Database tables created')
     print('Starting Flask server on port 5000...')
-    app.run(debug=True, port=5001, host='127.0.0.1')
+    app.run(debug=True, port=5000, host='127.0.0.1')

@@ -21,7 +21,7 @@ function Settings() {
     const userEmail = localStorage.getItem('currentUser');
     if (userEmail) {
       try {
-        const response = await fetch(`http://127.0.0.1:5001/api/user-profile/${userEmail}`);
+        const response = await fetch(`http://127.0.0.1:5000/api/user-profile/${userEmail}`);
         const result = await response.json();
         if (result.success) {
           setUserProfile({
@@ -60,7 +60,7 @@ function Settings() {
       formData.append('email', localStorage.getItem('currentUser'));
 
       try {
-        const response = await fetch('http://127.0.0.1:5001/api/upload-profile-photo', {
+        const response = await fetch('http://127.0.0.1:5000/api/upload-profile-photo', {
           method: 'POST',
           body: formData
         });
@@ -85,7 +85,7 @@ function Settings() {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://127.0.0.1:5001/api/update-profile', {
+      const response = await fetch('http://127.0.0.1:5000/api/update-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -108,7 +108,7 @@ function Settings() {
   };
 
   return (
-    <div className="desktop">
+    <div className="desktop settings">
       <button 
         onClick={() => navigate('/dashboard')} 
         className="back-button"
@@ -135,7 +135,7 @@ function Settings() {
             >
               {userProfile.profilePhoto ? (
                 <img 
-                  src={`http://127.0.0.1:5001${userProfile.profilePhoto}`} 
+                  src={`http://127.0.0.1:5000${userProfile.profilePhoto}`} 
                   alt="Profile" 
                   className="profile-photo-display"
                   style={{ 

@@ -19,7 +19,7 @@ function Dashboard() {
 
   const fetchUserProfile = async (email) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5001/api/user-profile/${email}`);
+      const response = await fetch(`http://127.0.0.1:5000/api/user-profile/${email}`);
       const result = await response.json();
       if (result.success) {
         setUserName(result.profile.name || email.split('@')[0]);
@@ -109,7 +109,7 @@ function Dashboard() {
           <div className="avatar-circle">
             {userPhoto ? (
               <img 
-                src={`http://127.0.0.1:5001${userPhoto}`} 
+                src={`http://127.0.0.1:5000${userPhoto}`} 
                 alt="Profile" 
                 style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
               />
