@@ -406,12 +406,18 @@ def get_milestones(project_id):
     result = []
     for milestone in milestones:
         tasks = Task.query.filter_by(milestone_id=milestone.id).all()
+        assigned_members = []
+        if milestone.assigned_members:
+            try:
+                assigned_members = json.loads(milestone.assigned_members) if milestone.assigned_members.startswith('[') else milestone.assigned_members.split(',')
+            except:
+                assigned_members = milestone.assigned_members.split(',') if milestone.assigned_members else []
         result.append({
             'id': milestone.id,
             'title': milestone.title,
             'startDate': milestone.start_date,
             'endDate': milestone.end_date,
-            'assignedMembers': milestone.assigned_members.split(',') if milestone.assigned_members else [],
+            'assignedMembers': assigned_members,
             'progress': milestone.progress,
             'tasks': [{
                 'id': task.id,
@@ -428,12 +434,18 @@ def get_milestones(project_id):
 @cross_origin()
 def add_milestone(project_id):
     data = request.json
+    assigned_members = data.get('assignedMembers', [])
+    if isinstance(assigned_members, list):
+        assigned_members_str = json.dumps(assigned_members)
+    else:
+        assigned_members_str = str(assigned_members)
+    
     milestone = Milestone(
         project_id=project_id,
         title=data['title'],
         start_date=data['startDate'],
         end_date=data['endDate'],
-        assigned_members=','.join(data['assignedMembers']) if isinstance(data['assignedMembers'], list) else data['assignedMembers']
+        assigned_members=assigned_members_str
     )
     db.session.add(milestone)
     db.session.flush()
@@ -446,7 +458,7 @@ def add_milestone(project_id):
             due_date=task_data.get('dueDate', ''),
             assignee=task_data.get('assignee', ''),
             responsibility=task_data.get('responsibility', ''),
-            status='To Do'
+            status='Not Started'
         )
         db.session.add(task)
     
