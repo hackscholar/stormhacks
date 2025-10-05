@@ -11,6 +11,7 @@ function ProjectTimeline() {
   const [hoveredMilestone, setHoveredMilestone] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showCompletionPopup, setShowCompletionPopup] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -457,23 +458,175 @@ function ProjectTimeline() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - Bar Graph */}
       <div style={{
         flex: 1,
-        padding: '40px',
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
+        flexDirection: 'column'
       }}>
+        {/* Month Slider */}
         <div style={{
-          textAlign: 'center',
-          color: 'white',
-          fontSize: '24px',
-          fontWeight: '600'
+          padding: '20px 20px 20px 40px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
         }}>
-          <h2 style={{ margin: '0 0 20px 0', fontSize: '2rem' }}>Project Timeline</h2>
-          <p style={{ fontSize: '18px', opacity: 0.8 }}>Manage your milestones and tasks from the sidebar</p>
+          <div style={{
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
+          }}>
+            {/* Double arrow with slider */}
+            <div style={{
+              position: 'relative',
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ cursor: 'pointer' }} onClick={() => setSelectedMonth(Math.max(0, selectedMonth - 1))}>
+                <path d="M15 18L9 12L15 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="11 18L5 12L11 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <div style={{
+                flex: 1,
+                position: 'relative',
+                height: '2px',
+                background: 'white',
+                margin: '0 -6px'
+              }}>
+                <input
+                  type="range"
+                  min="0"
+                  max="11"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '0',
+                    right: '0',
+                    transform: 'translateY(-50%)',
+                    width: '100%',
+                    height: '20px',
+                    background: 'transparent',
+                    outline: 'none',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    cursor: 'pointer'
+                  }}
+                />
+              </div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ cursor: 'pointer' }} onClick={() => setSelectedMonth(Math.min(11, selectedMonth + 1))}>
+                <path d="M9 18L15 12L9 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="13 18L19 12L13 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            
+            {/* Labels underneath */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              width: '100%',
+              marginTop: '10px',
+              paddingLeft: '24px',
+              paddingRight: '24px'
+            }}>
+              <div style={{ position: 'relative' }}>
+                <span style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>Jan</span>
+                <div style={{
+                  position: 'absolute',
+                  left: '0',
+                  top: '20px',
+                  width: '1px',
+                  height: '20px',
+                  background: 'white'
+                }}></div>
+              </div>
+              <span style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>Dec</span>
+            </div>
+          </div>
+          <style>{`
+            input[type="range"]::-webkit-slider-track {
+              background: transparent;
+              height: 2px;
+              border: none;
+            }
+            input[type="range"]::-webkit-slider-thumb {
+              appearance: none;
+              width: 12px;
+              height: 12px;
+              background: #FFD700;
+              border-radius: 50%;
+              border: none;
+              cursor: pointer;
+            }
+            input[type="range"]::-moz-range-track {
+              background: transparent;
+              height: 2px;
+              border: none;
+            }
+            input[type="range"]::-moz-range-thumb {
+              width: 12px;
+              height: 12px;
+              background: #FFD700;
+              border-radius: 50%;
+              border: none;
+              cursor: pointer;
+            }
+            input[type="range"] {
+              background: transparent;
+              border: none;
+            }
+          `}</style>
         </div>
+        
+        {milestones.length > 0 ? (
+          <div style={{ flex: 1, padding: '40px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{ width: '100%', maxWidth: '800px' }}>
+              {/* Timeline content will go here */}
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            textAlign: 'center',
+            color: 'white',
+            fontSize: '24px',
+            fontWeight: '600'
+          }}>
+            <div>
+              <h2 style={{ margin: '0 0 20px 0', fontSize: '2rem' }}>Project Timeline</h2>
+              <p style={{ fontSize: '18px', opacity: 0.8 }}>Add milestones to see your timeline visualization</p>
+              
+              {/* Sample timeline structure */}
+              <div style={{ width: '100%', maxWidth: '600px', margin: '40px auto' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '20px',
+                  color: 'white',
+                  fontSize: '14px'
+                }}>
+                  <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+                </div>
+                <div style={{
+                  height: '60px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '30px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '14px'
+                }}>
+                  Timeline will appear here
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Milestone Form Popup */}
