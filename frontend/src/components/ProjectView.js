@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Uploads from './uploads/uploads';
 
 function ProjectView() {
   const { projectId } = useParams();
@@ -52,6 +53,7 @@ function ProjectView() {
       <div className="project-workspace">
         <h3>Project Workspace</h3>
         <p>Project content will go here...</p>
+        <Uploads />
       </div>
 
       <button 
