@@ -50,6 +50,16 @@ function ProjectView() {
         ))}
       </div>
 
+      <div className="chatroom-section">
+        <h3>Team Chat</h3>
+        <button 
+          onClick={() => navigate('/chatroom')} 
+          className="chatroom-button"
+        >
+          Open Chatroom
+        </button>
+      </div>
+
       <div className="project-workspace">
         <h3>Project Workspace</h3>
         <p>Project content will go here...</p>

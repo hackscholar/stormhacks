@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import CreateProject from './components/CreateProject';
 import ProjectView from './components/ProjectView';
 import ProjectsList from './components/ProjectsList';
+import Chatroom from './components/chat/chatroom';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/create-project" element={<CreateProject />} />
         <Route path="/projects" element={<ProjectsList />} />
         <Route path="/project/:projectId" element={<ProjectView />} />
+        <Route path="/chatroom" element={<Chatroom currentUser={{id: 1, name: 'User'}} />} />
       </Routes>
     </Router>
   );
