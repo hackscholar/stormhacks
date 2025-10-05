@@ -64,18 +64,18 @@ function ProjectView() {
             Timeline
           </button>
           <button 
-            className={`tab-button ${activeTab === 'chatroom' ? 'active' : ''}`}
-            onClick={() => setActiveTab('chatroom')}
-          >
-            <img src="/icons/chat-icon.svg" alt="Chat" style={{width: '20px', height: '20px', marginRight: '8px'}} />
-            Chatroom
-          </button>
-          <button 
             className={`tab-button ${activeTab === 'files' ? 'active' : ''}`}
             onClick={() => setActiveTab('files')}
           >
             <img src="/icons/file-icon.svg" alt="Files" style={{width: '20px', height: '20px', marginRight: '8px'}} />
             File Specs
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'chatroom' ? 'active' : ''}`}
+            onClick={() => setActiveTab('chatroom')}
+          >
+            <img src="/icons/chat-icon.svg" alt="Chat" style={{width: '20px', height: '20px', marginRight: '8px'}} />
+            Chatroom
           </button>
           <button 
             className={`tab-button ${activeTab === 'team' ? 'active' : ''}`}
