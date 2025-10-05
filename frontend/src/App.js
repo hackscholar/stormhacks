@@ -8,6 +8,7 @@ import ProjectView from './components/ProjectView';
 import ProjectsList from './components/ProjectsList';
 import Chatroom from './components/chat/chatroom';
 import ProjectTimeline from './components/timeline/timeline';
+import Settings from './components/Settings';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/project/:projectId" element={<ProjectView />} />
         <Route path="/project/:projectId/timeline" element={<ProjectTimeline />} />
         <Route path="/chatroom" element={<Chatroom currentUser={{id: 1, name: 'User'}} />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </Router>
   );

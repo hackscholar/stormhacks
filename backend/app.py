@@ -34,6 +34,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
+    name = db.Column(db.String(200), nullable=True)
+    profile_photo = db.Column(db.String(500), nullable=True)
 
 class Project(db.Model):
     id = db.Column(db.String(50), primary_key=True)
@@ -123,11 +125,16 @@ def signup():
         data = request.json
         email = data.get('email')
         password = data.get('password')
+        name = data.get('name')
         
         if User.query.filter_by(email=email).first():
             return jsonify({'success': False, 'message': 'User already exists'})
         
-        new_user = User(email=email, password=generate_password_hash(password, method='pbkdf2:sha256'))
+        new_user = User(
+            email=email, 
+            password=generate_password_hash(password, method='pbkdf2:sha256'),
+            name=name
+        )
         db.session.add(new_user)
         db.session.commit()
         
@@ -468,6 +475,101 @@ def update_task_status(task_id):
         return jsonify({'success': True})
     return jsonify({'success': False, 'message': 'Task not found'})
 
+# Profile management endpoints
+@app.route('/api/user-profile/<email>', methods=['GET'])
+@cross_origin()
+def get_user_profile(email):
+    user = User.query.filter_by(email=email).first()
+    if user:
+        return jsonify({
+            'success': True,
+            'profile': {
+                'name': user.name or email.split('@')[0],
+                'email': user.email,
+                'profilePhoto': user.profile_photo
+            }
+        })
+    return jsonify({'success': False, 'message': 'User not found'})
+
+@app.route('/api/upload-profile-photo', methods=['POST'])
+@cross_origin()
+def upload_profile_photo():
+    try:
+        print('Upload request received')
+        print('Files:', request.files.keys())
+        print('Form data:', request.form.to_dict())
+        
+        if 'photo' not in request.files:
+            print('No photo in request')
+            return jsonify({'success': False, 'message': 'No photo uploaded'})
+        
+        file = request.files['photo']
+        email = request.form.get('email')
+        
+        print(f'File: {file.filename}, Email: {email}')
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No file selected'})
+        
+        # Save file
+        import os
+        from werkzeug.utils import secure_filename
+        
+        filename = secure_filename(f"{email.replace('@', '_')}_{file.filename}")
+        upload_path = os.path.join('uploads', 'profiles')
+        os.makedirs(upload_path, exist_ok=True)
+        file_path = os.path.join(upload_path, filename)
+        
+        print(f'Saving to: {file_path}')
+        file.save(file_path)
+        
+        # Update user profile
+        user = User.query.filter_by(email=email).first()
+        if user:
+            user.profile_photo = f'/uploads/profiles/{filename}'
+            db.session.commit()
+            print(f'Updated user profile photo: {user.profile_photo}')
+            return jsonify({'success': True, 'photoUrl': user.profile_photo})
+        
+        print('User not found')
+        return jsonify({'success': False, 'message': 'User not found'})
+    except Exception as e:
+        print(f'Upload error: {str(e)}')
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/update-profile', methods=['POST'])
+@cross_origin()
+def update_profile():
+    try:
+        data = request.json
+        email = data.get('email')
+        name = data.get('name')
+        new_password = data.get('newPassword')
+        
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({'success': False, 'message': 'User not found'})
+        
+        # Update name
+        if name:
+            user.name = name
+        
+        # Update password if provided
+        if new_password:
+            user.password = generate_password_hash(new_password, method='pbkdf2:sha256')
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Profile updated successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/uploads/profiles/<filename>', methods=['GET'])
+@cross_origin()
+def serve_profile_photo(filename):
+    from flask import send_from_directory
+    import os
+    return send_from_directory(os.path.join(os.getcwd(), 'uploads/profiles'), filename)
+
 # Register blueprints
 from routes.uploads import uploads_bp
 app.register_blueprint(uploads_bp)
@@ -477,4 +579,4 @@ if __name__ == '__main__':
         db.create_all()
         print('Database tables created')
     print('Starting Flask server on port 5000...')
-    app.run(debug=True, port=5000, host='127.0.0.1')
+    app.run(debug=True, port=5001, host='127.0.0.1')

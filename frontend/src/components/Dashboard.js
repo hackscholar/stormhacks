@@ -6,15 +6,31 @@ function Dashboard() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [userName, setUserName] = useState('');
+  const [userPhoto, setUserPhoto] = useState(null);
   const [hideTimeout, setHideTimeout] = useState(null);
   const navigate = useNavigate();
 
   React.useEffect(() => {
     const currentUser = localStorage.getItem('currentUser');
     if (currentUser) {
-      setUserName(currentUser.split('@')[0]);
+      fetchUserProfile(currentUser);
     }
   }, []);
+
+  const fetchUserProfile = async (email) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:5001/api/user-profile/${email}`);
+      const result = await response.json();
+      if (result.success) {
+        setUserName(result.profile.name || email.split('@')[0]);
+        setUserPhoto(result.profile.profilePhoto);
+      } else {
+        setUserName(email.split('@')[0]);
+      }
+    } catch (error) {
+      setUserName(email.split('@')[0]);
+    }
+  };
 
   const handleMouseEnter = () => {
     if (hideTimeout) {
@@ -91,15 +107,22 @@ function Dashboard() {
       >
         <div className="profile-avatar">
           <div className="avatar-circle">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
+            {userPhoto ? (
+              <img 
+                src={`http://127.0.0.1:5001${userPhoto}`} 
+                alt="Profile" 
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+              />
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            )}
           </div>
           <span className="user-name">{userName}</span>
         </div>
         <div className={`dropdown-content ${showDropdown ? 'show' : ''}`}>
-          <a onClick={() => console.log('Settings clicked')}>Settings</a>
-          <a onClick={() => console.log('Profile clicked')}>Profile</a>
+          <a onClick={() => navigate('/settings')}>Settings</a>
           <a onClick={handleSignOut}>Sign Out</a>
         </div>
       </div>
