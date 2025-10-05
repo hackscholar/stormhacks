@@ -7,9 +7,12 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
   const [showTopicModal, setShowTopicModal] = useState(false);
   const [newTopicName, setNewTopicName] = useState('');
   const [activeChatId, setActiveChatId] = useState(chatId);
-  const [chatrooms, setChatrooms] = useState([
-    { id: 'general', name: 'General', color: 'linear-gradient(135deg, #1e3c72, #c9a9dd)', pinned: false, hasUnread: false, lastRead: Date.now() }
-  ]);
+  const [chatrooms, setChatrooms] = useState(() => {
+    const stored = localStorage.getItem('chatrooms');
+    return stored ? JSON.parse(stored) : [
+      { id: 'general', name: 'General', color: 'linear-gradient(135deg, #1e3c72, #c9a9dd)', pinned: false, hasUnread: false, lastRead: Date.now() }
+    ];
+  });
   const [isAttachHovered, setIsAttachHovered] = useState(false);
   const [showThreadModal, setShowThreadModal] = useState(false);
   const [selectedThread, setSelectedThread] = useState(null);
@@ -43,7 +46,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
     markAsRead(activeChatId);
     
     const interval = setInterval(() => {
-      fetch(`/api/chat/messages?chat_id=${activeChatId}`)
+      fetch(`http://localhost:5000/api/chat/messages?chat_id=${activeChatId}`)
         .then(response => {
           if (response.ok) {
             return response.json();
@@ -63,24 +66,26 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Delete' && activeChatId !== 'general') {
-        const topicToDelete = chatrooms.find(room => room.id === activeChatId);
-        if (topicToDelete) {
-          setTopicToDelete(topicToDelete);
+      // Check for Delete, Backspace, or 'd' key
+      if ((e.key === 'Delete' || e.key === 'Backspace' || e.key === 'd') && activeChatId !== 'general') {
+        e.preventDefault();
+        const currentTopic = chatrooms.find(room => room.id === activeChatId);
+        if (currentTopic) {
+          setTopicToDelete(currentTopic);
           setShowDeleteModal(true);
         }
       }
     };
     
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [activeChatId, chatrooms]);
 
 
 
   const fetchTopics = async () => {
     try {
-      const response = await fetch('/api/chat/topics');
+      const response = await fetch('http://localhost:5000/api/chat/topics');
       if (response.ok) {
         const data = await response.json();
         setChatrooms(data);
@@ -102,7 +107,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
 
   const fetchMessages = async () => {
     try {
-      const response = await fetch(`/api/chat/messages?chat_id=${activeChatId}`);
+      const response = await fetch(`http://localhost:5000/api/chat/messages?chat_id=${activeChatId}`);
       if (response.ok) {
         const data = await response.json();
         setMessages(data.reverse());
@@ -132,7 +137,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
         if (newMessage.trim()) formData.append('content', newMessage);
         if (replyTo) formData.append('reply_to', replyTo);
         
-        const response = await fetch('/api/chat/upload', {
+        const response = await fetch('http://localhost:5000/api/chat/upload', {
           method: 'POST',
           body: formData
         });
@@ -155,7 +160,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
         }
       } else {
         // Handle text-only message
-        const response = await fetch('/api/chat/messages', {
+        const response = await fetch('http://localhost:5000/api/chat/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -206,6 +211,16 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
   const createTopic = async () => {
     if (!newTopicName.trim()) return;
     
+    // Check if topic name already exists
+    const existingTopic = chatrooms.find(room => 
+      room.name.toLowerCase() === newTopicName.trim().toLowerCase()
+    );
+    
+    if (existingTopic) {
+      alert('A topic with this name already exists!');
+      return;
+    }
+    
     const newTopic = {
       id: newTopicName.toLowerCase().replace(/\s+/g, '-'),
       name: newTopicName,
@@ -216,7 +231,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
     };
     
     try {
-      const response = await fetch('/api/chat/topics', {
+      const response = await fetch('http://localhost:5000/api/chat/topics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newTopic)
@@ -292,7 +307,7 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
   const deleteTopic = async (topicId) => {
     try {
       // Delete topic and its messages from backend
-      const response = await fetch(`/api/chat/topics/${topicId}`, {
+      const response = await fetch(`http://localhost:5000/api/chat/topics/${topicId}`, {
         method: 'DELETE'
       });
       

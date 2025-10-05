@@ -131,6 +131,17 @@ def create_topic():
     conn.close()
     return jsonify({'status': 'created'})
 
+@chat_bp.route('/topics/<topic_id>', methods=['DELETE'])
+def delete_topic(topic_id):
+    conn = get_db()
+    # Delete all messages for this topic
+    conn.execute('DELETE FROM messages WHERE chat_id = ?', (topic_id,))
+    # Delete the topic itself
+    conn.execute('DELETE FROM chat_topics WHERE id = ?', (topic_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'deleted'})
+
 @chat_bp.route('/groups/<int:group_id>/members', methods=['POST'])
 def add_member():
     data = request.get_json()
