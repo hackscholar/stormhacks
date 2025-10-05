@@ -166,8 +166,21 @@ def login():
 def join_project():
     data = request.json
     code = data.get('code')
+    user_email = data.get('user_email', '')
     
     project = Project.query.filter_by(code=code).first()
+    
+    if project:
+        # Add user as collaborator if not already one and not the creator
+        if user_email and user_email != project.creator:
+            existing = Collaborator.query.filter_by(project_id=project.id, email=user_email).first()
+            if not existing:
+                new_collab = Collaborator(project_id=project.id, email=user_email)
+                db.session.add(new_collab)
+                db.session.flush()
+                resp = Responsibility(collaborator_id=new_collab.id, description='Team Member')
+                db.session.add(resp)
+                db.session.commit()
     
     if project:
         # Get collaborators and their responsibilities

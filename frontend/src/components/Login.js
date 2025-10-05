@@ -20,7 +20,7 @@ function Login() {
       const result = await response.json();
       
       if (result.success) {
-        localStorage.setItem('currentUser', email);
+        sessionStorage.setItem('currentUser', email);
         setMessage('Login successful! Redirecting...');
         setTimeout(() => {
           navigate('/dashboard');

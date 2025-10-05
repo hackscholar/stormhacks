@@ -148,7 +148,7 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
         // Handle file upload with optional text
         const formData = new FormData();
         formData.append('file', selectedFile);
-        formData.append('user_id', currentUser.id || localStorage.getItem('currentUser') || 'user');
+        formData.append('user_id', currentUser.id || sessionStorage.getItem('currentUser') || 'user');
         formData.append('username', currentUser.name || currentUserName || 'User');
         formData.append('chat_id', activeChatId);
         if (newMessage.trim()) formData.append('content', newMessage);
@@ -183,7 +183,7 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_id: currentUser.id || localStorage.getItem('currentUser') || 'user',
+            user_id: currentUser.id || sessionStorage.getItem('currentUser') || 'user',
             username: currentUser.name || currentUserName || 'User',
             content: newMessage,
             reply_to: replyTo,
@@ -365,7 +365,7 @@ const Chatroom = ({ currentUser = {}, chatId = 'general' }) => {
   };
 
   const fetchCurrentUserName = async () => {
-    const email = localStorage.getItem('currentUser');
+    const email = sessionStorage.getItem('currentUser');
     if (email) {
       try {
         const response = await fetch(`http://127.0.0.1:5000/api/user-profile/${encodeURIComponent(email)}`);

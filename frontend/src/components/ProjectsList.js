@@ -4,22 +4,39 @@ import { useNavigate } from 'react-router-dom';
 function ProjectsList() {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchUserProjects();
   }, []);
 
+  useEffect(() => {
+    // Refresh projects when component becomes visible (e.g., after joining/creating)
+    const handleFocus = () => {
+      fetchUserProjects();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
   const fetchUserProjects = async () => {
     const userEmail = localStorage.getItem('currentUser');
     if (userEmail) {
       try {
+        setLoading(true);
         const response = await fetch(`http://127.0.0.1:5000/api/user-projects/${userEmail}`);
         const result = await response.json();
         setProjects(result.projects || []);
       } catch (error) {
         console.error('Error fetching projects:', error);
+        setProjects([]);
+      } finally {
+        setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
   };
 
@@ -34,7 +51,9 @@ function ProjectsList() {
       
       <h2>Your Projects ({projects.length})</h2>
       
-      {projects.length > 0 ? (
+      {loading ? (
+        <div>Loading projects...</div>
+      ) : projects.length > 0 ? (
         <div className="projects-layout">
           <div className="projects-list">
             {projects.map(project => (

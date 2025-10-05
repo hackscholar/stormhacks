@@ -11,7 +11,7 @@ function Dashboard() {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    const currentUser = localStorage.getItem('currentUser');
+    const currentUser = sessionStorage.getItem('currentUser');
     if (currentUser) {
       fetchUserProfile(currentUser);
     }
@@ -72,7 +72,10 @@ function Dashboard() {
       const response = await fetch('http://127.0.0.1:5000/api/join-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: joinCode })
+        body: JSON.stringify({ 
+          code: joinCode,
+          user_email: sessionStorage.getItem('currentUser')
+        })
       });
       
       const result = await response.json();
@@ -84,8 +87,8 @@ function Dashboard() {
         setShowJoinModal(false);
         setJoinCode('');
         
-        // Redirect to project timeline
-        navigate(`/project/${result.project.id}/timeline`);
+        // Redirect to projects page
+        navigate('/projects');
       } else {
         alert(result.message);
       }

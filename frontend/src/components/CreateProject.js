@@ -84,8 +84,8 @@ function CreateProject() {
         // Store project data for timeline access
         localStorage.setItem('currentProject', JSON.stringify(result.project));
         
-        // Redirect to timeline
-        navigate(`/project/${result.project.id}/timeline`);
+        // Redirect to projects page
+        navigate('/projects');
         
         // Send email invitations
         try {
