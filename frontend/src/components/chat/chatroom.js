@@ -359,12 +359,14 @@ const Chatroom = ({ currentUser, chatId = 'general' }) => {
   };
 
   return (
-    <div style={{
-      width: '100vw',
-      height: '100vh',
+    <div className="chatroom-compact" style={{
+      width: '100%',
+      height: '500px',
       background: '#8178A1',
       display: 'flex',
-      fontFamily: 'Archivo, sans-serif'
+      fontFamily: 'Archivo, sans-serif',
+      borderRadius: '20px',
+      overflow: 'hidden'
     }}>
       {/* Sidebar */}
       <div style={{
