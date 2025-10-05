@@ -174,6 +174,12 @@ def join_project():
         collaborators = Collaborator.query.filter_by(project_id=project.id).all()
         collab_list = []
         
+        # Add creator as a collaborator
+        collab_list.append({
+            'email': project.creator,
+            'responsibilities': ['Project Owner']
+        })
+        
         for collab in collaborators:
             responsibilities = Responsibility.query.filter_by(collaborator_id=collab.id).all()
             collab_list.append({
@@ -256,6 +262,12 @@ def get_user_projects(email):
         collaborators = Collaborator.query.filter_by(project_id=project.id).all()
         collab_list = []
         
+        # Add creator as a collaborator
+        collab_list.append({
+            'email': project.creator,
+            'responsibilities': ['Project Owner']
+        })
+        
         for collab in collaborators:
             responsibilities = Responsibility.query.filter_by(collaborator_id=collab.id).all()
             collab_list.append({
@@ -284,6 +296,12 @@ def get_project(project_id):
     # Get collaborators for this project
     collaborators = Collaborator.query.filter_by(project_id=project.id).all()
     collab_list = []
+    
+    # Add creator as a collaborator
+    collab_list.append({
+        'email': project.creator,
+        'responsibilities': ['Project Owner']
+    })
     
     for collab in collaborators:
         responsibilities = Responsibility.query.filter_by(collaborator_id=collab.id).all()
