@@ -74,13 +74,8 @@ function CreateProject() {
       const result = await response.json();
       
       if (result.success) {
-        setGeneratedCode(result.project.code);
-        setStatus('success');
-        
-        // Store locally
-        const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-        projects.push(result.project);
-        localStorage.setItem('projects', JSON.stringify(projects));
+        // Redirect to project view
+        navigate(`/project/${result.project.id}`);
         
         // Send email invitations
         try {
@@ -113,13 +108,7 @@ function CreateProject() {
     <div className="container">
       <h2>Create Project</h2>
       
-      {status === 'success' ? (
-        <div className="success-message">
-          <h3>Success</h3>
-          <p>Project created! Code: <strong>{generatedCode}</strong></p>
-          <button onClick={() => navigate('/dashboard')}>Back to Dashboard</button>
-        </div>
-      ) : status === 'failed' ? (
+      {status === 'failed' ? (
         <div className="error-message">
           <h3>Failed</h3>
           <p>Project creation failed. Please try again.</p>

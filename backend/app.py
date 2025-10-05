@@ -195,6 +195,70 @@ def all_users():
     user_list = [{'id': u.id, 'email': u.email, 'password': u.password} for u in users]
     return jsonify({'users': user_list, 'count': len(user_list)})
 
+@app.route('/api/user-projects/<email>', methods=['GET'])
+@cross_origin()
+def get_user_projects(email):
+    # Get projects where user is creator
+    created_projects = Project.query.filter_by(creator=email).all()
+    
+    # Get projects where user is collaborator
+    collaborator_projects = db.session.query(Project).join(Collaborator).filter(Collaborator.email == email).all()
+    
+    # Combine and deduplicate
+    all_projects = list({p.id: p for p in created_projects + collaborator_projects}.values())
+    
+    project_list = []
+    for project in all_projects:
+        # Get collaborators for this project
+        collaborators = Collaborator.query.filter_by(project_id=project.id).all()
+        collab_list = []
+        
+        for collab in collaborators:
+            responsibilities = Responsibility.query.filter_by(collaborator_id=collab.id).all()
+            collab_list.append({
+                'email': collab.email,
+                'responsibilities': [r.description for r in responsibilities]
+            })
+        
+        project_list.append({
+            'id': project.id,
+            'name': project.name,
+            'creator': project.creator,
+            'code': project.code,
+            'collaborators': collab_list
+        })
+    
+    return jsonify({'projects': project_list})
+
+@app.route('/api/project/<project_id>', methods=['GET'])
+@cross_origin()
+def get_project(project_id):
+    project = Project.query.filter_by(id=project_id).first()
+    
+    if not project:
+        return jsonify({'success': False, 'message': 'Project not found'})
+    
+    # Get collaborators for this project
+    collaborators = Collaborator.query.filter_by(project_id=project.id).all()
+    collab_list = []
+    
+    for collab in collaborators:
+        responsibilities = Responsibility.query.filter_by(collaborator_id=collab.id).all()
+        collab_list.append({
+            'email': collab.email,
+            'responsibilities': [r.description for r in responsibilities]
+        })
+    
+    project_dict = {
+        'id': project.id,
+        'name': project.name,
+        'creator': project.creator,
+        'code': project.code,
+        'collaborators': collab_list
+    }
+    
+    return jsonify({'success': True, 'project': project_dict})
+
 def send_invitation_email(to_email, project_name, role, project_code, creator_email):
     try:
         # Create message

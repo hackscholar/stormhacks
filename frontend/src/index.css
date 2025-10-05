@@ -281,3 +281,180 @@ p {
   font-size: 1rem;
   width: 30px;
 }
+
+.fullscreen-container {
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  padding: 2rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.back-button {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  background: #6c757d;
+  z-index: 1000;
+}
+
+.back-button:hover {
+  background: #5a6268;
+}
+
+.project-info {
+  margin: 2rem 0;
+}
+
+.collaborators-section {
+  margin: 2rem 0;
+}
+
+.collaborator-card {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.project-workspace {
+  margin: 2rem 0;
+  padding: 2rem;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  text-align: center;
+  min-height: 300px;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.projects-modal {
+  max-width: 900px;
+  height: 600px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.projects-layout {
+  display: flex;
+  height: 500px;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.projects-list {
+  width: 300px;
+  border-right: 1px solid #ddd;
+  padding-right: 1rem;
+  overflow-y: auto;
+}
+
+.project-list-item {
+  border: 1px solid #ddd;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.project-list-item:hover {
+  border-color: #007bff;
+  background: #f8f9fa;
+}
+
+.project-list-item.selected {
+  border-color: #007bff;
+  background: #e3f2fd;
+}
+
+.project-list-item h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.project-list-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+  text-align: left;
+}
+
+.project-preview {
+  flex: 1;
+  padding-left: 1rem;
+  overflow-y: auto;
+}
+
+.no-selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #666;
+}
+
+.collaborators-preview {
+  margin: 1rem 0;
+}
+
+.collab-preview {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.collab-preview ul {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.5rem;
+}
+
+.open-project-btn {
+  background: #28a745;
+  margin-top: 1rem;
+}
+
+.open-project-btn:hover {
+  background: #218838;
+}
+
+.projects-page {
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  padding: 2rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.no-projects {
+  text-align: center;
+  margin-top: 2rem;
+}
