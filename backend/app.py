@@ -605,9 +605,12 @@ def serve_profile_photo(filename):
 
 # Register blueprints
 from routes.uploads import uploads_bp
-from routes.chat import chat_bp
+from routes.chat import chat_bp, init_chat_db
 app.register_blueprint(uploads_bp)
 app.register_blueprint(chat_bp, url_prefix='/api/chat')
+
+# Initialize chat database
+init_chat_db()
 
 if __name__ == '__main__':
     with app.app_context():
