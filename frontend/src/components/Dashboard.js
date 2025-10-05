@@ -38,9 +38,14 @@ function Dashboard() {
       const result = await response.json();
       
       if (result.success) {
+        // Store project data for timeline access
+        localStorage.setItem('currentProject', JSON.stringify(result.project));
+        
         setShowJoinModal(false);
         setJoinCode('');
-        fetchUserProjects(); // Refresh projects
+        
+        // Redirect to project timeline
+        navigate(`/project/${result.project.id}/timeline`);
       } else {
         alert(result.message);
       }
